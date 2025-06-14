@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Bell, Search, SidebarTrigger } from "lucide-react";
+import { Bell, Search, Menu } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,7 +10,9 @@ export const Header = () => {
     <header className="bg-white border-b border-gray-200 px-6 py-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <SidebarTrigger className="text-gray-600 hover:text-gray-900" />
+          <Button variant="ghost" size="sm" className="text-gray-600 hover:text-gray-900">
+            <Menu className="w-5 h-5" />
+          </Button>
           <div className="relative">
             <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
             <Input 

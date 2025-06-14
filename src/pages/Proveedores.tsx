@@ -15,7 +15,8 @@ import {
   Edit,
   Trash2,
   FileText,
-  TrendingUp
+  TrendingUp,
+  DollarSign
 } from 'lucide-react';
 
 const proveedores = [

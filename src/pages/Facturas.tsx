@@ -13,7 +13,10 @@ import {
   Edit, 
   Trash2,
   Calendar,
-  Building2
+  Building2,
+  FileText,
+  CheckCircle,
+  DollarSign
 } from 'lucide-react';
 import {
   Select,
