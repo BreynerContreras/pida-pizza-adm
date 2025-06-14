@@ -26,7 +26,7 @@ const App = () => (
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/" element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={['admin']}>
                 <Layout>
                   <Dashboard />
                 </Layout>
@@ -58,16 +58,6 @@ const App = () => (
                 <Layout>
                   <div className="p-8 text-center">
                     <h2 className="text-2xl font-bold">Módulo de Reportes</h2>
-                    <p className="text-gray-600 mt-2">Próximamente disponible</p>
-                  </div>
-                </Layout>
-              </ProtectedRoute>
-            } />
-            <Route path="/configuracion" element={
-              <ProtectedRoute allowedRoles={['admin']}>
-                <Layout>
-                  <div className="p-8 text-center">
-                    <h2 className="text-2xl font-bold">Configuración del Sistema</h2>
                     <p className="text-gray-600 mt-2">Próximamente disponible</p>
                   </div>
                 </Layout>

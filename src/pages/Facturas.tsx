@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,6 +24,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useAuth } from '../contexts/AuthContext';
+import NuevaFacturaModal from '../components/facturas/NuevaFacturaModal';
+import FiltrosAvanzados from '../components/facturas/FiltrosAvanzados';
+import jsPDF from 'jspdf';
 
 const facturas = [
   {
@@ -96,31 +99,157 @@ const getStatusColor = (estado: string) => {
 };
 
 const Facturas = () => {
+  const { user } = useAuth();
+  const [facturasList, setFacturasList] = useState(facturas);
   const [filtroEstado, setFiltroEstado] = useState("todos");
   const [busqueda, setBusqueda] = useState("");
+  const [mesSeleccionado, setMesSeleccionado] = useState("todos");
+  const [modalNuevaFactura, setModalNuevaFactura] = useState(false);
+  const [modalFiltros, setModalFiltros] = useState(false);
+  const [filtrosAvanzados, setFiltrosAvanzados] = useState({});
 
-  const facturasFiltradas = facturas.filter(factura => {
+  useEffect(() => {
+    const savedFacturas = localStorage.getItem('facturas');
+    if (savedFacturas) {
+      setFacturasList(JSON.parse(savedFacturas));
+    }
+  }, []);
+
+  const guardarFacturas = (nuevasFacturas: any[]) => {
+    setFacturasList(nuevasFacturas);
+    localStorage.setItem('facturas', JSON.stringify(nuevasFacturas));
+  };
+
+  const agregarFactura = (facturaData: any) => {
+    const nuevaFactura = {
+      id: `FAC-${new Date().getFullYear()}-${String(facturasList.length + 1).padStart(3, '0')}`,
+      ...facturaData,
+      monto: `B/. ${facturaData.monto}`,
+      fecha: new Date(facturaData.fecha).toLocaleDateString('es-ES')
+    };
+    
+    const nuevasFacturas = [...facturasList, nuevaFactura];
+    guardarFacturas(nuevasFacturas);
+  };
+
+  const eliminarFactura = (facturaId: string) => {
+    const nuevasFacturas = facturasList.filter(f => f.id !== facturaId);
+    guardarFacturas(nuevasFacturas);
+  };
+
+  const exportarPDF = () => {
+    const doc = new jsPDF();
+    doc.setFontSize(16);
+    doc.text('Reporte de Facturas - Pida Pizza', 20, 20);
+    
+    let yPosition = 40;
+    facturasFiltradas.forEach((factura, index) => {
+      if (yPosition > 250) {
+        doc.addPage();
+        yPosition = 20;
+      }
+      
+      doc.setFontSize(12);
+      doc.text(`${factura.id} - ${factura.proveedor}`, 20, yPosition);
+      doc.text(`Monto: ${factura.monto}`, 20, yPosition + 10);
+      doc.text(`Fecha: ${factura.fecha}`, 20, yPosition + 20);
+      doc.text(`Estado: ${factura.estado}`, 20, yPosition + 30);
+      
+      yPosition += 50;
+    });
+    
+    doc.save('facturas-reporte.pdf');
+  };
+
+  const aplicarFiltrosAvanzados = (filtros: any) => {
+    setFiltrosAvanzados(filtros);
+  };
+
+  const facturasFiltradas = facturasList.filter(factura => {
+    // Filtrar por usuario proveedor - solo ve sus facturas
+    if (user?.role === 'proveedor' && factura.proveedor !== (user?.nombre || user?.username)) {
+      return false;
+    }
+
     const matchEstado = filtroEstado === "todos" || factura.estado === filtroEstado;
     const matchBusqueda = busqueda === "" || 
       factura.id.toLowerCase().includes(busqueda.toLowerCase()) ||
       factura.proveedor.toLowerCase().includes(busqueda.toLowerCase()) ||
       factura.rif.toLowerCase().includes(busqueda.toLowerCase());
     
-    return matchEstado && matchBusqueda;
+    // Filtro por mes
+    let matchMes = true;
+    if (mesSeleccionado !== "todos") {
+      const fechaFactura = new Date(factura.fecha.split('/').reverse().join('-'));
+      const mesFactura = fechaFactura.getMonth();
+      matchMes = mesFactura === parseInt(mesSeleccionado);
+    }
+
+    // Filtros avanzados
+    let matchFiltrosAvanzados = true;
+    if (Object.keys(filtrosAvanzados).length > 0) {
+      const filtros = filtrosAvanzados as any;
+      if (filtros.nombreProveedor && !factura.proveedor.toLowerCase().includes(filtros.nombreProveedor.toLowerCase())) {
+        matchFiltrosAvanzados = false;
+      }
+      if (filtros.numeroFactura && !factura.id.toLowerCase().includes(filtros.numeroFactura.toLowerCase())) {
+        matchFiltrosAvanzados = false;
+      }
+      if (filtros.fechaDesde || filtros.fechaHasta) {
+        const fechaFactura = new Date(factura.fecha.split('/').reverse().join('-'));
+        if (filtros.fechaDesde && fechaFactura < new Date(filtros.fechaDesde)) {
+          matchFiltrosAvanzados = false;
+        }
+        if (filtros.fechaHasta && fechaFactura > new Date(filtros.fechaHasta)) {
+          matchFiltrosAvanzados = false;
+        }
+      }
+    }
+    
+    return matchEstado && matchBusqueda && matchMes && matchFiltrosAvanzados;
   });
+
+  const meses = [
+    { value: "todos", label: "Todos los meses" },
+    { value: "0", label: "Enero" },
+    { value: "1", label: "Febrero" },
+    { value: "2", label: "Marzo" },
+    { value: "3", label: "Abril" },
+    { value: "4", label: "Mayo" },
+    { value: "5", label: "Junio" },
+    { value: "6", label: "Julio" },
+    { value: "7", label: "Agosto" },
+    { value: "8", label: "Septiembre" },
+    { value: "9", label: "Octubre" },
+    { value: "10", label: "Noviembre" },
+    { value: "11", label: "Diciembre" }
+  ];
+
+  const mostrarBotonesEdicion = user?.role === 'admin';
 
   return (
     <div className="space-y-6">
-      {/* Encabezado */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Gestión de Facturas</h1>
-          <p className="text-gray-600">Administra y rastrea todas las facturas de proveedores</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            {user?.role === 'proveedor' ? 'Mis Facturas' : 'Gestión de Facturas'}
+          </h1>
+          <p className="text-gray-600">
+            {user?.role === 'proveedor' 
+              ? 'Administra tus facturas enviadas' 
+              : 'Administra y rastrea todas las facturas de proveedores'
+            }
+          </p>
         </div>
-        <Button className="bg-blue-600 hover:bg-blue-700">
-          <Plus className="w-4 h-4 mr-2" />
-          Nueva Factura
-        </Button>
+        {(user?.role === 'proveedor' || user?.role === 'admin') && (
+          <Button 
+            className="bg-blue-600 hover:bg-blue-700"
+            onClick={() => setModalNuevaFactura(true)}
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Nueva Factura
+          </Button>
+        )}
       </div>
 
       {/* Filtros y búsqueda */}
@@ -137,6 +266,19 @@ const Facturas = () => {
               />
             </div>
             
+            <Select value={mesSeleccionado} onValueChange={setMesSeleccionado}>
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="Filtrar por mes" />
+              </SelectTrigger>
+              <SelectContent>
+                {meses.map((mes) => (
+                  <SelectItem key={mes.value} value={mes.value}>
+                    {mes.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            
             <Select value={filtroEstado} onValueChange={setFiltroEstado}>
               <SelectTrigger className="w-48">
                 <SelectValue placeholder="Filtrar por estado" />
@@ -151,12 +293,12 @@ const Facturas = () => {
               </SelectContent>
             </Select>
             
-            <Button variant="outline">
+            <Button variant="outline" onClick={() => setModalFiltros(true)}>
               <Filter className="w-4 h-4 mr-2" />
               Más Filtros
             </Button>
             
-            <Button variant="outline">
+            <Button variant="outline" onClick={exportarPDF}>
               <Download className="w-4 h-4 mr-2" />
               Exportar
             </Button>
@@ -165,61 +307,63 @@ const Facturas = () => {
       </Card>
 
       {/* Resumen rápido */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Total Facturas</p>
-              <p className="text-2xl font-bold text-gray-900">{facturas.length}</p>
+      {user?.role === 'admin' && (
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <Card className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Total Facturas</p>
+                <p className="text-2xl font-bold text-gray-900">{facturasList.length}</p>
+              </div>
+              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                <FileText className="w-6 h-6 text-blue-600" />
+              </div>
             </div>
-            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-              <FileText className="w-6 h-6 text-blue-600" />
+          </Card>
+          
+          <Card className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Pendientes</p>
+                <p className="text-2xl font-bold text-yellow-600">
+                  {facturasList.filter(f => f.estado === 'pendiente').length}
+                </p>
+              </div>
+              <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+                <Calendar className="w-6 h-6 text-yellow-600" />
+              </div>
             </div>
-          </div>
-        </Card>
-        
-        <Card className="p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Pendientes</p>
-              <p className="text-2xl font-bold text-yellow-600">
-                {facturas.filter(f => f.estado === 'pendiente').length}
-              </p>
+          </Card>
+          
+          <Card className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">En Revisión</p>
+                <p className="text-2xl font-bold text-blue-600">
+                  {facturasList.filter(f => f.estado === 'revision').length}
+                </p>
+              </div>
+              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                <Search className="w-6 h-6 text-blue-600" />
+              </div>
             </div>
-            <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-              <Calendar className="w-6 h-6 text-yellow-600" />
+          </Card>
+          
+          <Card className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Aprobadas</p>
+                <p className="text-2xl font-bold text-green-600">
+                  {facturasList.filter(f => f.estado === 'aprobado').length}
+                </p>
+              </div>
+              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                <CheckCircle className="w-6 h-6 text-green-600" />
+              </div>
             </div>
-          </div>
-        </Card>
-        
-        <Card className="p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">En Revisión</p>
-              <p className="text-2xl font-bold text-blue-600">
-                {facturas.filter(f => f.estado === 'revision').length}
-              </p>
-            </div>
-            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-              <Search className="w-6 h-6 text-blue-600" />
-            </div>
-          </div>
-        </Card>
-        
-        <Card className="p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Aprobadas</p>
-              <p className="text-2xl font-bold text-green-600">
-                {facturas.filter(f => f.estado === 'aprobado').length}
-              </p>
-            </div>
-            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-              <CheckCircle className="w-6 h-6 text-green-600" />
-            </div>
-          </div>
-        </Card>
-      </div>
+          </Card>
+        </div>
+      )}
 
       {/* Lista de facturas */}
       <Card>
@@ -227,7 +371,7 @@ const Facturas = () => {
           <CardTitle className="flex items-center justify-between">
             <span>Lista de Facturas ({facturasFiltradas.length})</span>
             <div className="text-sm text-gray-500">
-              Mostrando {facturasFiltradas.length} de {facturas.length} facturas
+              Mostrando {facturasFiltradas.length} de {facturasList.length} facturas
             </div>
           </CardTitle>
         </CardHeader>
@@ -246,12 +390,21 @@ const Facturas = () => {
                     <Button variant="ghost" size="sm">
                       <Eye className="w-4 h-4" />
                     </Button>
-                    <Button variant="ghost" size="sm">
-                      <Edit className="w-4 h-4" />
-                    </Button>
-                    <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-800">
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                    {mostrarBotonesEdicion && (
+                      <>
+                        <Button variant="ghost" size="sm">
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="text-red-600 hover:text-red-800"
+                          onClick={() => eliminarFactura(factura.id)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </>
+                    )}
                   </div>
                 </div>
                 
@@ -302,6 +455,18 @@ const Facturas = () => {
           )}
         </CardContent>
       </Card>
+
+      <NuevaFacturaModal
+        isOpen={modalNuevaFactura}
+        onClose={() => setModalNuevaFactura(false)}
+        onSubmit={agregarFactura}
+      />
+
+      <FiltrosAvanzados
+        isOpen={modalFiltros}
+        onClose={() => setModalFiltros(false)}
+        onApplyFilters={aplicarFiltrosAvanzados}
+      />
     </div>
   );
 };

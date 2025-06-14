@@ -5,7 +5,6 @@ import {
   Building2,
   FileText,
   Home,
-  Settings,
   Users,
   PizzaIcon
 } from "lucide-react";
@@ -29,17 +28,8 @@ export function AppSidebar() {
   const { user } = useAuth();
 
   const getMenuItems = () => {
-    const baseItems = [
-      {
-        title: "Dashboard",
-        url: "/",
-        icon: Home,
-      }
-    ];
-
     if (user?.role === 'contadora') {
       return [
-        ...baseItems,
         {
           title: "Facturas",
           url: "/facturas",
@@ -50,7 +40,6 @@ export function AppSidebar() {
 
     if (user?.role === 'proveedor') {
       return [
-        ...baseItems,
         {
           title: "Mis Facturas",
           url: "/facturas",
@@ -61,7 +50,11 @@ export function AppSidebar() {
 
     if (user?.role === 'admin') {
       return [
-        ...baseItems,
+        {
+          title: "Inicio",
+          url: "/",
+          icon: Home,
+        },
         {
           title: "Facturas",
           url: "/facturas",
@@ -80,7 +73,7 @@ export function AppSidebar() {
       ];
     }
 
-    return baseItems;
+    return [];
   };
 
   const getAdminItems = () => {
@@ -91,12 +84,7 @@ export function AppSidebar() {
         title: "Usuarios",
         url: "/usuarios",
         icon: Users,
-      },
-      {
-        title: "Configuración",
-        url: "/configuracion",
-        icon: Settings,
-      },
+      }
     ];
   };
 
