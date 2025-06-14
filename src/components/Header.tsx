@@ -1,11 +1,14 @@
 
 import React from 'react';
-import { Bell, Search, Menu } from "lucide-react";
+import { Bell, Search, Menu, LogOut } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useAuth } from '../contexts/AuthContext';
 
 export const Header = () => {
+  const { user, logout } = useAuth();
+
   return (
     <header className="bg-white border-b border-gray-200 px-6 py-4">
       <div className="flex items-center justify-between">
@@ -32,14 +35,16 @@ export const Header = () => {
           
           <div className="text-right">
             <p className="text-sm font-medium text-gray-900">
-              {new Date().toLocaleDateString('es-ES', { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
-              })}
+              {user?.nombre || user?.username}
+            </p>
+            <p className="text-xs text-gray-600 capitalize">
+              {user?.role}
             </p>
           </div>
+
+          <Button variant="ghost" size="sm" onClick={logout} className="text-red-600 hover:text-red-800">
+            <LogOut className="w-5 h-5" />
+          </Button>
         </div>
       </div>
     </header>
