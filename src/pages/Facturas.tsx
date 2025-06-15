@@ -24,10 +24,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { useAuth } from '../contexts/AuthContext';
 import NuevaFacturaModal from '../components/facturas/NuevaFacturaModal';
 import FiltrosAvanzados from '../components/facturas/FiltrosAvanzados';
+import VerDetallesFacturaModal from '../components/facturas/VerDetallesFacturaModal';
+import EditarFacturaModal from '../components/facturas/EditarFacturaModal';
 import jsPDF from 'jspdf';
+import * as XLSX from 'xlsx';
 import { useToast } from "@/hooks/use-toast";
 
 const facturas = [
@@ -108,6 +122,9 @@ const Facturas = () => {
   const [mesSeleccionado, setMesSeleccionado] = useState("todos");
   const [modalNuevaFactura, setModalNuevaFactura] = useState(false);
   const [modalFiltros, setModalFiltros] = useState(false);
+  const [modalVerDetalles, setModalVerDetalles] = useState(false);
+  const [modalEditar, setModalEditar] = useState(false);
+  const [facturaSeleccionada, setFacturaSeleccionada] = useState<any>(null);
   const [filtrosAvanzados, setFiltrosAvanzados] = useState({});
 
   useEffect(() => {
@@ -160,37 +177,104 @@ const Facturas = () => {
     guardarFacturas(nuevasFacturas);
   };
 
-  const eliminarFactura = (facturaId: string) => {
-    const nuevasFacturas = facturasList.filter(f => f.id !== facturaId);
+  const editarFactura = (facturaEditada: any) => {
+    const nuevasFacturas = facturasList.map(factura => 
+      factura.id === facturaEditada.id ? facturaEditada : factura
+    );
     guardarFacturas(nuevasFacturas);
   };
 
-  const exportarPDF = () => {
-    const doc = new jsPDF();
-    doc.setFontSize(16);
-    doc.text('Reporte de Facturas - Pida Pizza', 20, 20);
-    
-    let yPosition = 40;
-    facturasFiltradas.forEach((factura, index) => {
-      if (yPosition > 250) {
-        doc.addPage();
-        yPosition = 20;
-      }
-      
-      doc.setFontSize(12);
-      doc.text(`${factura.id} - ${factura.proveedor}`, 20, yPosition);
-      doc.text(`Monto: ${factura.monto}`, 20, yPosition + 10);
-      doc.text(`Fecha: ${factura.fecha}`, 20, yPosition + 20);
-      doc.text(`Estado: ${factura.estado}`, 20, yPosition + 30);
-      
-      yPosition += 50;
+  const eliminarFactura = (facturaId: string) => {
+    const nuevasFacturas = facturasList.filter(f => f.id !== facturaId);
+    guardarFacturas(nuevasFacturas);
+    toast({
+      title: "Factura eliminada",
+      description: "La factura ha sido eliminada exitosamente.",
     });
-    
-    doc.save('facturas-reporte.pdf');
+  };
+
+  const exportarArchivo = () => {
+    if (user?.role === 'contadora') {
+      // Exportar a Excel para contadora
+      const datosParaExcel = facturasFiltradas.map(factura => ({
+        'Número de Factura': factura.id,
+        'Gerente Operativo': factura.proveedor,
+        'RIF': factura.rif,
+        'Monto': factura.monto,
+        'Fecha de Emisión': factura.fecha,
+        'Fecha de Vencimiento': factura.vencimiento,
+        'Estado': factura.estado,
+        'Categoría': factura.categoria,
+        'Descripción': factura.descripcion
+      }));
+
+      const ws = XLSX.utils.json_to_sheet(datosParaExcel);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Facturas');
+      
+      // Ajustar el ancho de las columnas
+      const colWidths = [
+        { wch: 20 }, // Número de Factura
+        { wch: 25 }, // Gerente Operativo
+        { wch: 15 }, // RIF
+        { wch: 15 }, // Monto
+        { wch: 15 }, // Fecha de Emisión
+        { wch: 18 }, // Fecha de Vencimiento
+        { wch: 12 }, // Estado
+        { wch: 20 }, // Categoría
+        { wch: 30 }  // Descripción
+      ];
+      ws['!cols'] = colWidths;
+      
+      XLSX.writeFile(wb, 'facturas-reporte.xlsx');
+      
+      toast({
+        title: "Archivo Excel descargado",
+        description: "El reporte de facturas se ha descargado en formato Excel.",
+      });
+    } else {
+      // Exportar a PDF para administrador
+      const doc = new jsPDF();
+      doc.setFontSize(16);
+      doc.text('Reporte de Facturas - Pida Pizza', 20, 20);
+      
+      let yPosition = 40;
+      facturasFiltradas.forEach((factura, index) => {
+        if (yPosition > 250) {
+          doc.addPage();
+          yPosition = 20;
+        }
+        
+        doc.setFontSize(12);
+        doc.text(`${factura.id} - ${factura.proveedor}`, 20, yPosition);
+        doc.text(`Monto: ${factura.monto}`, 20, yPosition + 10);
+        doc.text(`Fecha: ${factura.fecha}`, 20, yPosition + 20);
+        doc.text(`Estado: ${factura.estado}`, 20, yPosition + 30);
+        
+        yPosition += 50;
+      });
+      
+      doc.save('facturas-reporte.pdf');
+      
+      toast({
+        title: "Archivo PDF descargado",
+        description: "El reporte de facturas se ha descargado en formato PDF.",
+      });
+    }
   };
 
   const aplicarFiltrosAvanzados = (filtros: any) => {
     setFiltrosAvanzados(filtros);
+  };
+
+  const abrirModalVerDetalles = (factura: any) => {
+    setFacturaSeleccionada(factura);
+    setModalVerDetalles(true);
+  };
+
+  const abrirModalEditar = (factura: any) => {
+    setFacturaSeleccionada(factura);
+    setModalEditar(true);
   };
 
   // Filtrar facturas excluyendo las pagadas (para la página principal)
@@ -331,7 +415,7 @@ const Facturas = () => {
               Más Filtros
             </Button>
             
-            <Button variant="outline" onClick={exportarPDF}>
+            <Button variant="outline" onClick={exportarArchivo}>
               <Download className="w-4 h-4 mr-2" />
               Exportar
             </Button>
@@ -438,22 +522,47 @@ const Facturas = () => {
                     )}
                   </div>
                   <div className="flex items-center gap-2">
-                    <Button variant="ghost" size="sm">
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => abrirModalVerDetalles(factura)}
+                    >
                       <Eye className="w-4 h-4" />
                     </Button>
                     {mostrarBotonesEdicion && (
                       <>
-                        <Button variant="ghost" size="sm">
-                          <Edit className="w-4 h-4" />
-                        </Button>
                         <Button 
                           variant="ghost" 
-                          size="sm" 
-                          className="text-red-600 hover:text-red-800"
-                          onClick={() => eliminarFactura(factura.id)}
+                          size="sm"
+                          onClick={() => abrirModalEditar(factura)}
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <Edit className="w-4 h-4" />
                         </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="text-red-600 hover:text-red-800"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>¿Eliminar factura?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Esta acción no se puede deshacer. La factura {factura.id} será eliminada permanentemente.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => eliminarFactura(factura.id)}>
+                                Eliminar
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </>
                     )}
                   </div>
@@ -517,6 +626,19 @@ const Facturas = () => {
         isOpen={modalFiltros}
         onClose={() => setModalFiltros(false)}
         onApplyFilters={aplicarFiltrosAvanzados}
+      />
+
+      <VerDetallesFacturaModal
+        isOpen={modalVerDetalles}
+        onClose={() => setModalVerDetalles(false)}
+        factura={facturaSeleccionada}
+      />
+
+      <EditarFacturaModal
+        isOpen={modalEditar}
+        onClose={() => setModalEditar(false)}
+        factura={facturaSeleccionada}
+        onSave={editarFactura}
       />
     </div>
   );

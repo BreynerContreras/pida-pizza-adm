@@ -17,6 +17,21 @@ import {
   TrendingUp,
   DollarSign
 } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import VerDetallesGerenteModal from '../components/gerentes/VerDetallesGerenteModal';
+import EditarGerenteModal from '../components/gerentes/EditarGerenteModal';
+import NuevoGerenteModal from '../components/gerentes/NuevoGerenteModal';
+import { useToast } from "@/hooks/use-toast";
 
 const gerentesOperativos = [
   {
@@ -110,13 +125,76 @@ const getRatingStars = (rating: number) => {
 };
 
 const Proveedores = () => {
+  const { toast } = useToast();
   const [busqueda, setBusqueda] = useState("");
+  const [gerentesList, setGerentesList] = useState(gerentesOperativos);
+  const [modalVerDetalles, setModalVerDetalles] = useState(false);
+  const [modalEditar, setModalEditar] = useState(false);
+  const [modalNuevo, setModalNuevo] = useState(false);
+  const [gerenteSeleccionado, setGerenteSeleccionado] = useState<any>(null);
 
-  const gerentesFiltrados = gerentesOperativos.filter(gerente => 
+  const gerentesFiltrados = gerentesList.filter(gerente => 
     gerente.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
     gerente.rif.toLowerCase().includes(busqueda.toLowerCase()) ||
     gerente.categoria.toLowerCase().includes(busqueda.toLowerCase())
   );
+
+  const abrirModalVerDetalles = (gerente: any) => {
+    setGerenteSeleccionado(gerente);
+    setModalVerDetalles(true);
+  };
+
+  const abrirModalEditar = (gerente: any) => {
+    setGerenteSeleccionado(gerente);
+    setModalEditar(true);
+  };
+
+  const editarGerente = (gerenteEditado: any) => {
+    const nuevosGerentes = gerentesList.map(gerente => 
+      gerente.id === gerenteEditado.id ? gerenteEditado : gerente
+    );
+    setGerentesList(nuevosGerentes);
+    // También guardar en localStorage si es necesario
+    localStorage.setItem('gerentes', JSON.stringify(nuevosGerentes));
+  };
+
+  const agregarGerente = (nuevoGerenteData: any) => {
+    const nuevoGerente = {
+      id: gerentesList.length + 1,
+      ...nuevoGerenteData,
+      estado: 'pendiente',
+      facturas: 0,
+      montoTotal: 'B/. 0.00',
+      fechaRegistro: new Date().toLocaleDateString('es-ES'),
+      rating: 0
+    };
+    
+    const nuevosGerentes = [...gerentesList, nuevoGerente];
+    setGerentesList(nuevosGerentes);
+    localStorage.setItem('gerentes', JSON.stringify(nuevosGerentes));
+  };
+
+  const eliminarGerente = (gerenteId: number) => {
+    // Verificar si tiene facturas pendientes
+    const gerente = gerentesList.find(g => g.id === gerenteId);
+    if (gerente && gerente.facturas > 0) {
+      toast({
+        title: "No se puede eliminar",
+        description: "El gerente operativo tiene facturas asociadas. No es posible eliminarlo.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const nuevosGerentes = gerentesList.filter(g => g.id !== gerenteId);
+    setGerentesList(nuevosGerentes);
+    localStorage.setItem('gerentes', JSON.stringify(nuevosGerentes));
+    
+    toast({
+      title: "Gerente operativo eliminado",
+      description: "El gerente operativo ha sido eliminado exitosamente.",
+    });
+  };
 
   return (
     <div className="space-y-6">
@@ -126,7 +204,10 @@ const Proveedores = () => {
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Gestión de Gerentes Operativos</h1>
           <p className="text-gray-600">Administra la información de todos los gerentes operativos</p>
         </div>
-        <Button className="bg-blue-600 hover:bg-blue-700">
+        <Button 
+          className="bg-blue-600 hover:bg-blue-700"
+          onClick={() => setModalNuevo(true)}
+        >
           <Plus className="w-4 h-4 mr-2" />
           Nuevo Gerente Operativo
         </Button>
@@ -268,17 +349,50 @@ const Proveedores = () => {
 
               {/* Acciones */}
               <div className="flex gap-2 pt-4">
-                <Button variant="outline" size="sm" className="flex-1">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="flex-1"
+                  onClick={() => abrirModalVerDetalles(gerente)}
+                >
                   <Eye className="w-4 h-4 mr-2" />
                   Ver Detalles
                 </Button>
-                <Button variant="outline" size="sm" className="flex-1">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="flex-1"
+                  onClick={() => abrirModalEditar(gerente)}
+                >
                   <Edit className="w-4 h-4 mr-2" />
                   Editar
                 </Button>
-                <Button variant="outline" size="sm" className="text-red-600 hover:text-red-800">
-                  <Trash2 className="w-4 h-4" />
-                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="outline" size="sm" className="text-red-600 hover:text-red-800">
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>¿Eliminar gerente operativo?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Esta acción no se puede deshacer. El gerente operativo "{gerente.nombre}" será eliminado permanentemente.
+                        {gerente.facturas > 0 && (
+                          <span className="block mt-2 text-red-600 font-medium">
+                            Advertencia: Este gerente tiene {gerente.facturas} facturas asociadas.
+                          </span>
+                        )}
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => eliminarGerente(gerente.id)}>
+                        Eliminar
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
             </CardContent>
           </Card>
