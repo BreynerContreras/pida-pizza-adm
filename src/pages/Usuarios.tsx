@@ -2,8 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { 
   Users, 
@@ -19,26 +17,32 @@ import {
   Trash2
 } from 'lucide-react';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { User as UserType } from '../types/auth';
+import { useToast } from "@/hooks/use-toast";
+import SeleccionarRolModal from '../components/usuarios/SeleccionarRolModal';
+import NuevoUsuarioModal from '../components/usuarios/NuevoUsuarioModal';
+import VerDetallesUsuarioModal from '../components/usuarios/VerDetallesUsuarioModal';
+import EditarUsuarioModal from '../components/usuarios/EditarUsuarioModal';
 
 const Usuarios = () => {
+  const { toast } = useToast();
   const [users, setUsers] = useState<UserType[]>([]);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [formData, setFormData] = useState({
-    username: '',
-    password: '',
-    nombre: '',
-    telefono: '',
-    email: '',
-    direccion: '',
-    rif: ''
-  });
+  const [isRoleSelectionOpen, setIsRoleSelectionOpen] = useState(false);
+  const [isNewUserModalOpen, setIsNewUserModalOpen] = useState(false);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<'contadora' | 'gerente_operativo' | 'admin'>('gerente_operativo');
+  const [selectedUser, setSelectedUser] = useState<UserType | null>(null);
 
   useEffect(() => {
     const savedUsers = localStorage.getItem('users');
@@ -47,19 +51,16 @@ const Usuarios = () => {
     }
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
+  const handleRoleSelected = (role: 'contadora' | 'gerente_operativo' | 'admin') => {
+    setSelectedRole(role);
+    setIsRoleSelectionOpen(false);
+    setIsNewUserModalOpen(true);
+  };
+
+  const handleSaveUser = (userData: Omit<UserType, 'id' | 'lastAccess'>) => {
     const newUser: UserType = {
+      ...userData,
       id: Date.now().toString(),
-      username: formData.username,
-      password: formData.password,
-      role: 'proveedor',
-      nombre: formData.nombre,
-      telefono: formData.telefono,
-      email: formData.email,
-      direccion: formData.direccion,
-      rif: formData.rif,
       lastAccess: new Date().toISOString()
     };
 
@@ -67,30 +68,56 @@ const Usuarios = () => {
     setUsers(updatedUsers);
     localStorage.setItem('users', JSON.stringify(updatedUsers));
     
-    setFormData({
-      username: '',
-      password: '',
-      nombre: '',
-      telefono: '',
-      email: '',
-      direccion: '',
-      rif: ''
+    toast({
+      title: "Usuario creado",
+      description: `El ${getRoleTitle(newUser.role)} ha sido creado exitosamente.`,
     });
-    setIsDialogOpen(false);
+  };
+
+  const handleEditUser = (editedUser: UserType) => {
+    const updatedUsers = users.map(user => 
+      user.id === editedUser.id ? editedUser : user
+    );
+    setUsers(updatedUsers);
+    localStorage.setItem('users', JSON.stringify(updatedUsers));
   };
 
   const deleteUser = (userId: string) => {
     const updatedUsers = users.filter(user => user.id !== userId);
     setUsers(updatedUsers);
     localStorage.setItem('users', JSON.stringify(updatedUsers));
+    
+    toast({
+      title: "Usuario eliminado",
+      description: "El usuario ha sido eliminado exitosamente.",
+    });
+  };
+
+  const openDetailsModal = (user: UserType) => {
+    setSelectedUser(user);
+    setIsDetailsModalOpen(true);
+  };
+
+  const openEditModal = (user: UserType) => {
+    setSelectedUser(user);
+    setIsEditModalOpen(true);
   };
 
   const getRoleColor = (role: string) => {
     switch (role) {
       case 'admin': return 'bg-purple-100 text-purple-800 border-purple-200';
       case 'contadora': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'proveedor': return 'bg-green-100 text-green-800 border-green-200';
+      case 'gerente_operativo': return 'bg-green-100 text-green-800 border-green-200';
       default: return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
+
+  const getRoleTitle = (role: string) => {
+    switch (role) {
+      case 'admin': return 'Administrador';
+      case 'contadora': return 'Contador/a';
+      case 'gerente_operativo': return 'Gerente Operativo';
+      default: return role;
     }
   };
 
@@ -112,96 +139,13 @@ const Usuarios = () => {
           <p className="text-gray-600">Administra los usuarios del sistema</p>
         </div>
         
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-blue-600 hover:bg-blue-700">
-              <Plus className="w-4 h-4 mr-2" />
-              Nuevo Usuario
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>Agregar Nuevo Usuario</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="username">Nombre de Usuario *</Label>
-                  <Input
-                    id="username"
-                    value={formData.username}
-                    onChange={(e) => setFormData({...formData, username: e.target.value})}
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="password">Contraseña *</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    value={formData.password}
-                    onChange={(e) => setFormData({...formData, password: e.target.value})}
-                    required
-                  />
-                </div>
-              </div>
-              
-              <div>
-                <Label htmlFor="nombre">Nombre del Proveedor *</Label>
-                <Input
-                  id="nombre"
-                  value={formData.nombre}
-                  onChange={(e) => setFormData({...formData, nombre: e.target.value})}
-                  required
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="telefono">Número de Teléfono</Label>
-                <Input
-                  id="telefono"
-                  value={formData.telefono}
-                  onChange={(e) => setFormData({...formData, telefono: e.target.value})}
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="email">Correo Electrónico</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({...formData, email: e.target.value})}
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="direccion">Dirección</Label>
-                <Input
-                  id="direccion"
-                  value={formData.direccion}
-                  onChange={(e) => setFormData({...formData, direccion: e.target.value})}
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="rif">Número de RIF de la Empresa</Label>
-                <Input
-                  id="rif"
-                  value={formData.rif}
-                  onChange={(e) => setFormData({...formData, rif: e.target.value})}
-                />
-              </div>
-              
-              <div className="flex gap-2 pt-4">
-                <Button type="submit" className="flex-1">Crear Usuario</Button>
-                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                  Cancelar
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
+        <Button 
+          className="bg-blue-600 hover:bg-blue-700"
+          onClick={() => setIsRoleSelectionOpen(true)}
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          Nuevo Usuario
+        </Button>
       </div>
 
       <Card className="p-4">
@@ -228,10 +172,13 @@ const Usuarios = () => {
                   <div>
                     <CardTitle className="text-lg">{user.nombre || user.username}</CardTitle>
                     <p className="text-sm text-gray-600">@{user.username}</p>
+                    {user.role === 'gerente_operativo' && user.nombreEmpresa && (
+                      <p className="text-sm text-green-600 font-medium">{user.nombreEmpresa}</p>
+                    )}
                   </div>
                 </div>
                 <Badge className={getRoleColor(user.role)} variant="outline">
-                  {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+                  {getRoleTitle(user.role)}
                 </Badge>
               </div>
             </CardHeader>
@@ -272,23 +219,50 @@ const Usuarios = () => {
               </div>
 
               <div className="flex gap-2 pt-4">
-                <Button variant="outline" size="sm" className="flex-1">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="flex-1"
+                  onClick={() => openDetailsModal(user)}
+                >
                   <Eye className="w-4 h-4 mr-2" />
                   Ver Detalles
                 </Button>
-                <Button variant="outline" size="sm" className="flex-1">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="flex-1"
+                  onClick={() => openEditModal(user)}
+                >
                   <Edit className="w-4 h-4 mr-2" />
                   Editar
                 </Button>
                 {user.role !== 'admin' && (
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="text-red-600 hover:text-red-800"
-                    onClick={() => deleteUser(user.id)}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="text-red-600 hover:text-red-800"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>¿Eliminar usuario?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Esta acción no se puede deshacer. El usuario "{user.nombre || user.username}" será eliminado permanentemente.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => deleteUser(user.id)}>
+                          Eliminar
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 )}
               </div>
             </CardContent>
@@ -305,6 +279,33 @@ const Usuarios = () => {
           </CardContent>
         </Card>
       )}
+
+      {/* Modales */}
+      <SeleccionarRolModal
+        isOpen={isRoleSelectionOpen}
+        onClose={() => setIsRoleSelectionOpen(false)}
+        onRoleSelected={handleRoleSelected}
+      />
+
+      <NuevoUsuarioModal
+        isOpen={isNewUserModalOpen}
+        onClose={() => setIsNewUserModalOpen(false)}
+        onSave={handleSaveUser}
+        role={selectedRole}
+      />
+
+      <VerDetallesUsuarioModal
+        isOpen={isDetailsModalOpen}
+        onClose={() => setIsDetailsModalOpen(false)}
+        usuario={selectedUser}
+      />
+
+      <EditarUsuarioModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        usuario={selectedUser}
+        onSave={handleEditUser}
+      />
     </div>
   );
 };

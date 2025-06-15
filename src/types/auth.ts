@@ -3,13 +3,17 @@ export interface User {
   id: string;
   username: string;
   password: string;
-  role: 'contadora' | 'proveedor' | 'admin';
+  role: 'contadora' | 'gerente_operativo' | 'admin';
   nombre?: string;
   telefono?: string;
   email?: string;
   direccion?: string;
   rif?: string;
   lastAccess?: string;
+  // Campos específicos para gerente operativo
+  nombreEmpresa?: string;
+  contacto?: string;
+  categoria?: string;
 }
 
 export interface AuthContextType {
@@ -28,4 +32,5 @@ export interface Factura {
   proveedor: string;
   imagenes?: string[];
   estado: 'pendiente' | 'aprobada' | 'rechazada';
+  createdBy?: string; // ID del usuario que creó la factura
 }

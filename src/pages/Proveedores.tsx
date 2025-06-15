@@ -33,7 +33,7 @@ import EditarGerenteModal from '../components/gerentes/EditarGerenteModal';
 import NuevoGerenteModal from '../components/gerentes/NuevoGerenteModal';
 import { useToast } from "@/hooks/use-toast";
 
-const gerentesOperativos = [
+const gerentesOperativosIniciales = [
   {
     id: 1,
     nombre: "Distribuidora La Rosa",
@@ -127,7 +127,10 @@ const getRatingStars = (rating: number) => {
 const Proveedores = () => {
   const { toast } = useToast();
   const [busqueda, setBusqueda] = useState("");
-  const [gerentesList, setGerentesList] = useState(gerentesOperativos);
+  const [gerentesList, setGerentesList] = useState(() => {
+    const savedGerentes = localStorage.getItem('gerentes');
+    return savedGerentes ? JSON.parse(savedGerentes) : gerentesOperativosIniciales;
+  });
   const [modalVerDetalles, setModalVerDetalles] = useState(false);
   const [modalEditar, setModalEditar] = useState(false);
   const [modalNuevo, setModalNuevo] = useState(false);
@@ -149,18 +152,22 @@ const Proveedores = () => {
     setModalEditar(true);
   };
 
-  const editarGerente = (gerenteEditado: any) => {
+  const guardarGerenteEditado = (gerenteEditado: any) => {
     const nuevosGerentes = gerentesList.map(gerente => 
       gerente.id === gerenteEditado.id ? gerenteEditado : gerente
     );
     setGerentesList(nuevosGerentes);
-    // También guardar en localStorage si es necesario
     localStorage.setItem('gerentes', JSON.stringify(nuevosGerentes));
+    
+    toast({
+      title: "Gerente operativo actualizado",
+      description: "La información ha sido actualizada exitosamente.",
+    });
   };
 
-  const agregarGerente = (nuevoGerenteData: any) => {
+  const guardarNuevoGerente = (nuevoGerenteData: any) => {
     const nuevoGerente = {
-      id: gerentesList.length + 1,
+      id: Date.now(), // Generar ID único basado en timestamp
       ...nuevoGerenteData,
       estado: 'pendiente',
       facturas: 0,
@@ -172,10 +179,14 @@ const Proveedores = () => {
     const nuevosGerentes = [...gerentesList, nuevoGerente];
     setGerentesList(nuevosGerentes);
     localStorage.setItem('gerentes', JSON.stringify(nuevosGerentes));
+    
+    toast({
+      title: "Gerente operativo creado",
+      description: "El nuevo gerente operativo ha sido registrado exitosamente.",
+    });
   };
 
   const eliminarGerente = (gerenteId: number) => {
-    // Verificar si tiene facturas pendientes
     const gerente = gerentesList.find(g => g.id === gerenteId);
     if (gerente && gerente.facturas > 0) {
       toast({
@@ -219,7 +230,7 @@ const Proveedores = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Total Gerentes Operativos</p>
-              <p className="text-2xl font-bold text-gray-900">{gerentesOperativos.length}</p>
+              <p className="text-2xl font-bold text-gray-900">{gerentesList.length}</p>
             </div>
             <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
               <Building2 className="w-6 h-6 text-blue-600" />
@@ -232,7 +243,7 @@ const Proveedores = () => {
             <div>
               <p className="text-sm text-gray-600">Activos</p>
               <p className="text-2xl font-bold text-green-600">
-                {gerentesOperativos.filter(p => p.estado === 'activo').length}
+                {gerentesList.filter(p => p.estado === 'activo').length}
               </p>
             </div>
             <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
@@ -246,7 +257,7 @@ const Proveedores = () => {
             <div>
               <p className="text-sm text-gray-600">Pendientes</p>
               <p className="text-2xl font-bold text-yellow-600">
-                {gerentesOperativos.filter(p => p.estado === 'pendiente').length}
+                {gerentesList.filter(p => p.estado === 'pendiente').length}
               </p>
             </div>
             <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
@@ -259,7 +270,9 @@ const Proveedores = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Volumen Total</p>
-              <p className="text-xl font-bold text-gray-900">B/. 140,491</p>
+              <p className="text-xl font-bold text-gray-900">
+                B/. {gerentesList.reduce((total, g) => total + parseFloat(g.montoTotal.replace('B/. ', '').replace(',', '')), 0).toLocaleString()}
+              </p>
             </div>
             <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
               <DollarSign className="w-6 h-6 text-purple-600" />
@@ -347,7 +360,7 @@ const Proveedores = () => {
                 </div>
               </div>
 
-              {/* Acciones */}
+              {/* Acciones corregidas */}
               <div className="flex gap-2 pt-4">
                 <Button 
                   variant="outline" 
@@ -408,6 +421,26 @@ const Proveedores = () => {
           </CardContent>
         </Card>
       )}
+
+      {/* Modales */}
+      <VerDetallesGerenteModal
+        isOpen={modalVerDetalles}
+        onClose={() => setModalVerDetalles(false)}
+        gerente={gerenteSeleccionado}
+      />
+
+      <EditarGerenteModal
+        isOpen={modalEditar}
+        onClose={() => setModalEditar(false)}
+        gerente={gerenteSeleccionado}
+        onSave={guardarGerenteEditado}
+      />
+
+      <NuevoGerenteModal
+        isOpen={modalNuevo}
+        onClose={() => setModalNuevo(false)}
+        onSave={guardarNuevoGerente}
+      />
     </div>
   );
 };
