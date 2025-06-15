@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,7 +18,7 @@ import {
   DollarSign
 } from 'lucide-react';
 
-const proveedores = [
+const gerentesOperativos = [
   {
     id: 1,
     nombre: "Distribuidora La Rosa",
@@ -113,10 +112,10 @@ const getRatingStars = (rating: number) => {
 const Proveedores = () => {
   const [busqueda, setBusqueda] = useState("");
 
-  const proveedoresFiltrados = proveedores.filter(proveedor => 
-    proveedor.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
-    proveedor.rif.toLowerCase().includes(busqueda.toLowerCase()) ||
-    proveedor.categoria.toLowerCase().includes(busqueda.toLowerCase())
+  const gerentesFiltrados = gerentesOperativos.filter(gerente => 
+    gerente.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
+    gerente.rif.toLowerCase().includes(busqueda.toLowerCase()) ||
+    gerente.categoria.toLowerCase().includes(busqueda.toLowerCase())
   );
 
   return (
@@ -124,12 +123,12 @@ const Proveedores = () => {
       {/* Encabezado */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Gestión de Proveedores</h1>
-          <p className="text-gray-600">Administra la información de todos los proveedores</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Gestión de Gerentes Operativos</h1>
+          <p className="text-gray-600">Administra la información de todos los gerentes operativos</p>
         </div>
         <Button className="bg-blue-600 hover:bg-blue-700">
           <Plus className="w-4 h-4 mr-2" />
-          Nuevo Proveedor
+          Nuevo Gerente Operativo
         </Button>
       </div>
 
@@ -138,8 +137,8 @@ const Proveedores = () => {
         <Card className="p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Total Proveedores</p>
-              <p className="text-2xl font-bold text-gray-900">{proveedores.length}</p>
+              <p className="text-sm text-gray-600">Total Gerentes Operativos</p>
+              <p className="text-2xl font-bold text-gray-900">{gerentesOperativos.length}</p>
             </div>
             <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
               <Building2 className="w-6 h-6 text-blue-600" />
@@ -152,7 +151,7 @@ const Proveedores = () => {
             <div>
               <p className="text-sm text-gray-600">Activos</p>
               <p className="text-2xl font-bold text-green-600">
-                {proveedores.filter(p => p.estado === 'activo').length}
+                {gerentesOperativos.filter(p => p.estado === 'activo').length}
               </p>
             </div>
             <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
@@ -166,7 +165,7 @@ const Proveedores = () => {
             <div>
               <p className="text-sm text-gray-600">Pendientes</p>
               <p className="text-2xl font-bold text-yellow-600">
-                {proveedores.filter(p => p.estado === 'pendiente').length}
+                {gerentesOperativos.filter(p => p.estado === 'pendiente').length}
               </p>
             </div>
             <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
@@ -203,10 +202,10 @@ const Proveedores = () => {
         </CardContent>
       </Card>
 
-      {/* Lista de proveedores */}
+      {/* Lista de gerentes operativos */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {proveedoresFiltrados.map((proveedor) => (
-          <Card key={proveedor.id} className="hover:shadow-lg transition-shadow">
+        {gerentesFiltrados.map((gerente) => (
+          <Card key={gerente.id} className="hover:shadow-lg transition-shadow">
             <CardHeader className="pb-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -214,12 +213,12 @@ const Proveedores = () => {
                     <Building2 className="w-6 h-6 text-blue-600" />
                   </div>
                   <div>
-                    <CardTitle className="text-lg">{proveedor.nombre}</CardTitle>
-                    <p className="text-sm text-gray-600">{proveedor.rif}</p>
+                    <CardTitle className="text-lg">{gerente.nombre}</CardTitle>
+                    <p className="text-sm text-gray-600">{gerente.rif}</p>
                   </div>
                 </div>
-                <Badge className={getStatusColor(proveedor.estado)} variant="outline">
-                  {proveedor.estado.charAt(0).toUpperCase() + proveedor.estado.slice(1)}
+                <Badge className={getStatusColor(gerente.estado)} variant="outline">
+                  {gerente.estado.charAt(0).toUpperCase() + gerente.estado.slice(1)}
                 </Badge>
               </div>
             </CardHeader>
@@ -229,26 +228,26 @@ const Proveedores = () => {
               <div className="grid grid-cols-1 gap-3">
                 <div className="flex items-center gap-2 text-sm">
                   <Mail className="w-4 h-4 text-gray-400" />
-                  <span className="text-gray-600">{proveedor.email}</span>
+                  <span className="text-gray-600">{gerente.email}</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <Phone className="w-4 h-4 text-gray-400" />
-                  <span className="text-gray-600">{proveedor.telefono}</span>
+                  <span className="text-gray-600">{gerente.telefono}</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <MapPin className="w-4 h-4 text-gray-400" />
-                  <span className="text-gray-600">{proveedor.direccion}</span>
+                  <span className="text-gray-600">{gerente.direccion}</span>
                 </div>
               </div>
 
               {/* Métricas */}
               <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-100">
                 <div className="text-center">
-                  <p className="text-2xl font-bold text-blue-600">{proveedor.facturas}</p>
+                  <p className="text-2xl font-bold text-blue-600">{gerente.facturas}</p>
                   <p className="text-xs text-gray-600">Facturas</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-lg font-bold text-green-600">{proveedor.montoTotal}</p>
+                  <p className="text-lg font-bold text-green-600">{gerente.montoTotal}</p>
                   <p className="text-xs text-gray-600">Volumen Total</p>
                 </div>
               </div>
@@ -256,14 +255,14 @@ const Proveedores = () => {
               {/* Información adicional */}
               <div className="flex items-center justify-between pt-2 border-t border-gray-100">
                 <div>
-                  <p className="text-sm font-medium text-gray-900">{proveedor.contacto}</p>
-                  <p className="text-xs text-gray-600">{proveedor.categoria}</p>
+                  <p className="text-sm font-medium text-gray-900">{gerente.contacto}</p>
+                  <p className="text-xs text-gray-600">{gerente.categoria}</p>
                 </div>
                 <div className="text-right">
                   <p className="text-sm font-medium text-gray-900">
-                    {getRatingStars(proveedor.rating)} {proveedor.rating}
+                    {getRatingStars(gerente.rating)} {gerente.rating}
                   </p>
-                  <p className="text-xs text-gray-600">Desde {proveedor.fechaRegistro}</p>
+                  <p className="text-xs text-gray-600">Desde {gerente.fechaRegistro}</p>
                 </div>
               </div>
 
@@ -286,12 +285,12 @@ const Proveedores = () => {
         ))}
       </div>
 
-      {proveedoresFiltrados.length === 0 && (
+      {gerentesFiltrados.length === 0 && (
         <Card>
           <CardContent className="text-center py-8">
             <Building2 className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No se encontraron proveedores</h3>
-            <p className="text-gray-600">Intenta ajustar la búsqueda o registrar un nuevo proveedor.</p>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No se encontraron gerentes operativos</h3>
+            <p className="text-gray-600">Intenta ajustar la búsqueda o registrar un nuevo gerente operativo.</p>
           </CardContent>
         </Card>
       )}

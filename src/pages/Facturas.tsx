@@ -28,6 +28,7 @@ import { useAuth } from '../contexts/AuthContext';
 import NuevaFacturaModal from '../components/facturas/NuevaFacturaModal';
 import FiltrosAvanzados from '../components/facturas/FiltrosAvanzados';
 import jsPDF from 'jspdf';
+import { useToast } from "@/hooks/use-toast";
 
 const facturas = [
   {
@@ -70,7 +71,7 @@ const facturas = [
     monto: "B/. 645.80",
     fecha: "12/06/2024",
     vencimiento: "27/06/2024",
-    estado: "pagado",
+    estado: "pendiente",
     categoria: "Vegetales",
     descripcion: "Vegetales orgánicos variados"
   },
@@ -100,6 +101,7 @@ const getStatusColor = (estado: string) => {
 
 const Facturas = () => {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [facturasList, setFacturasList] = useState(facturas);
   const [filtroEstado, setFiltroEstado] = useState("todos");
   const [busqueda, setBusqueda] = useState("");
@@ -118,6 +120,32 @@ const Facturas = () => {
   const guardarFacturas = (nuevasFacturas: any[]) => {
     setFacturasList(nuevasFacturas);
     localStorage.setItem('facturas', JSON.stringify(nuevasFacturas));
+  };
+
+  const cambiarEstadoFactura = (facturaId: string, nuevoEstado: string) => {
+    const nuevasFacturas = facturasList.map(factura => {
+      if (factura.id === facturaId) {
+        return { ...factura, estado: nuevoEstado };
+      }
+      return factura;
+    });
+    
+    guardarFacturas(nuevasFacturas);
+    
+    // Si el estado cambia a "pagado", guardar también en facturas pagadas
+    if (nuevoEstado === 'pagado') {
+      const facturasPagadas = JSON.parse(localStorage.getItem('facturasPagadas') || '[]');
+      const facturaPagada = nuevasFacturas.find(f => f.id === facturaId);
+      if (facturaPagada) {
+        facturasPagadas.push(facturaPagada);
+        localStorage.setItem('facturasPagadas', JSON.stringify(facturasPagadas));
+      }
+      
+      toast({
+        title: "Factura marcada como pagada",
+        description: "La factura ha sido movida a la sección de Facturas Pagadas.",
+      });
+    }
   };
 
   const agregarFactura = (facturaData: any) => {
@@ -165,8 +193,14 @@ const Facturas = () => {
     setFiltrosAvanzados(filtros);
   };
 
+  // Filtrar facturas excluyendo las pagadas (para la página principal)
   const facturasFiltradas = facturasList.filter(factura => {
-    // Filtrar por usuario proveedor - solo ve sus facturas
+    // Excluir facturas pagadas de la página principal
+    if (factura.estado === 'pagado') {
+      return false;
+    }
+
+    // Filtrar por usuario gerente operativo - solo ve sus facturas
     if (user?.role === 'proveedor' && factura.proveedor !== (user?.nombre || user?.username)) {
       return false;
     }
@@ -237,7 +271,7 @@ const Facturas = () => {
           <p className="text-gray-600">
             {user?.role === 'proveedor' 
               ? 'Administra tus facturas enviadas' 
-              : 'Administra y rastrea todas las facturas de proveedores'
+              : 'Administra y rastrea todas las facturas de gerentes operativos'
             }
           </p>
         </div>
@@ -259,7 +293,7 @@ const Facturas = () => {
             <div className="flex-1 relative">
               <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <Input
-                placeholder="Buscar por número, proveedor o RIF..."
+                placeholder="Buscar por número, gerente operativo o RIF..."
                 value={busqueda}
                 onChange={(e) => setBusqueda(e.target.value)}
                 className="pl-10"
@@ -288,7 +322,6 @@ const Facturas = () => {
                 <SelectItem value="pendiente">Pendiente</SelectItem>
                 <SelectItem value="revision">En Revisión</SelectItem>
                 <SelectItem value="aprobado">Aprobado</SelectItem>
-                <SelectItem value="pagado">Pagado</SelectItem>
                 <SelectItem value="rechazado">Rechazado</SelectItem>
               </SelectContent>
             </Select>
@@ -313,7 +346,7 @@ const Facturas = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Total Facturas</p>
-                <p className="text-2xl font-bold text-gray-900">{facturasList.length}</p>
+                <p className="text-2xl font-bold text-gray-900">{facturasList.filter(f => f.estado !== 'pagado').length}</p>
               </div>
               <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                 <FileText className="w-6 h-6 text-blue-600" />
@@ -371,7 +404,7 @@ const Facturas = () => {
           <CardTitle className="flex items-center justify-between">
             <span>Lista de Facturas ({facturasFiltradas.length})</span>
             <div className="text-sm text-gray-500">
-              Mostrando {facturasFiltradas.length} de {facturasList.length} facturas
+              Mostrando {facturasFiltradas.length} de {facturasList.filter(f => f.estado !== 'pagado').length} facturas
             </div>
           </CardTitle>
         </CardHeader>
@@ -385,6 +418,24 @@ const Facturas = () => {
                     <Badge className={getStatusColor(factura.estado)} variant="outline">
                       {factura.estado.charAt(0).toUpperCase() + factura.estado.slice(1)}
                     </Badge>
+                    {/* Selector de estado solo para administradores */}
+                    {user?.role === 'admin' && (
+                      <Select 
+                        value={factura.estado} 
+                        onValueChange={(valor) => cambiarEstadoFactura(factura.id, valor)}
+                      >
+                        <SelectTrigger className="w-40">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="pendiente">Pendiente</SelectItem>
+                          <SelectItem value="revision">En Revisión</SelectItem>
+                          <SelectItem value="aprobado">Aprobado</SelectItem>
+                          <SelectItem value="pagado">Pagado</SelectItem>
+                          <SelectItem value="rechazado">Rechazado</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
                   </div>
                   <div className="flex items-center gap-2">
                     <Button variant="ghost" size="sm">
@@ -412,7 +463,7 @@ const Facturas = () => {
                   <div>
                     <div className="flex items-center gap-2 mb-2">
                       <Building2 className="w-4 h-4 text-gray-400" />
-                      <span className="text-sm font-medium text-gray-600">Proveedor</span>
+                      <span className="text-sm font-medium text-gray-600">Gerente Operativo</span>
                     </div>
                     <p className="font-semibold text-gray-900">{factura.proveedor}</p>
                     <p className="text-sm text-gray-600">{factura.rif}</p>

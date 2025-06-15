@@ -9,6 +9,7 @@ import { Layout } from "./components/Layout";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Dashboard from "./pages/Dashboard";
 import Facturas from "./pages/Facturas";
+import FacturasPagadas from "./pages/FacturasPagadas";
 import Proveedores from "./pages/Proveedores";
 import Usuarios from "./pages/Usuarios";
 import Login from "./pages/Login";
@@ -46,6 +47,13 @@ const AppRoutes = () => {
         <ProtectedRoute allowedRoles={['contadora', 'proveedor', 'admin']}>
           <Layout>
             <Facturas />
+          </Layout>
+        </ProtectedRoute>
+      } />
+      <Route path="/facturas-pagadas" element={
+        <ProtectedRoute allowedRoles={['contadora', 'admin']}>
+          <Layout>
+            <FacturasPagadas />
           </Layout>
         </ProtectedRoute>
       } />

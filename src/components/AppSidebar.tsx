@@ -1,12 +1,12 @@
 
 import React from 'react';
 import {
-  BarChart3,
   Building2,
   FileText,
   Home,
   Users,
-  PizzaIcon
+  PizzaIcon,
+  CheckCircle
 } from "lucide-react";
 import {
   Sidebar,
@@ -34,6 +34,11 @@ export function AppSidebar() {
           title: "Facturas",
           url: "/facturas",
           icon: FileText,
+        },
+        {
+          title: "Facturas Pagadas",
+          url: "/facturas-pagadas",
+          icon: CheckCircle,
         }
       ];
     }
@@ -61,14 +66,14 @@ export function AppSidebar() {
           icon: FileText,
         },
         {
-          title: "Proveedores",
-          url: "/proveedores",
-          icon: Building2,
+          title: "Facturas Pagadas",
+          url: "/facturas-pagadas",
+          icon: CheckCircle,
         },
         {
-          title: "Reportes",
-          url: "/reportes",
-          icon: BarChart3,
+          title: "Gerentes Operativos",
+          url: "/proveedores",
+          icon: Building2,
         }
       ];
     }
