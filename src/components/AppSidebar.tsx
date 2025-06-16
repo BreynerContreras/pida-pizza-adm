@@ -43,7 +43,7 @@ export function AppSidebar() {
       ];
     }
 
-    if (user?.role === 'proveedor') {
+    if (user?.role === 'gerente_operativo') {
       return [
         {
           title: "Mis Facturas",

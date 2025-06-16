@@ -36,6 +36,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useAuth } from '../contexts/AuthContext';
+import { useLocation, useNavigate } from 'react-router-dom';
 import NuevaFacturaModal from '../components/facturas/NuevaFacturaModal';
 import FiltrosAvanzados from '../components/facturas/FiltrosAvanzados';
 import VerDetallesFacturaModal from '../components/facturas/VerDetallesFacturaModal';
@@ -116,6 +117,9 @@ const getStatusColor = (estado: string) => {
 const Facturas = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const location = useLocation();
+  const navigate = useNavigate();
+  
   const [facturasList, setFacturasList] = useState(facturas);
   const [filtroEstado, setFiltroEstado] = useState("todos");
   const [busqueda, setBusqueda] = useState("");
@@ -277,6 +281,41 @@ const Facturas = () => {
     setModalEditar(true);
   };
 
+  // Detectar filtros especiales desde navegación
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const filtroEspecial = searchParams.get('filtro');
+    
+    if (filtroEspecial === 'vencen_hoy') {
+      // Filtrar facturas que vencen hoy
+      const hoy = new Date().toLocaleDateString('es-ES');
+      const filtros = {
+        fechaVencimiento: hoy,
+        descripcion: 'Facturas que vencen hoy'
+      };
+      setFiltrosAvanzados(filtros);
+      toast({
+        title: "Filtro aplicado",
+        description: "Mostrando facturas que vencen hoy",
+      });
+    } else if (filtroEspecial === 'por_vencer') {
+      // Filtrar facturas que vencen en próximos 3 días
+      const hoy = new Date();
+      const tresDias = new Date();
+      tresDias.setDate(hoy.getDate() + 3);
+      
+      const filtros = {
+        fechaVencimientoHasta: tresDias.toLocaleDateString('es-ES'),
+        descripcion: 'Facturas por vencer (próximos 3 días)'
+      };
+      setFiltrosAvanzados(filtros);
+      toast({
+        title: "Filtro aplicado", 
+        description: "Mostrando facturas que vencen en los próximos 3 días",
+      });
+    }
+  }, [location.search, toast]);
+
   // Filtrar facturas excluyendo las pagadas (para la página principal)
   const facturasFiltradas = facturasList.filter(factura => {
     // Excluir facturas pagadas de la página principal
@@ -285,7 +324,7 @@ const Facturas = () => {
     }
 
     // Filtrar por usuario gerente operativo - solo ve sus facturas
-    if (user?.role === 'proveedor' && factura.proveedor !== (user?.nombre || user?.username)) {
+    if (user?.role === 'gerente_operativo' && factura.proveedor !== (user?.nombre || user?.username)) {
       return false;
     }
 
@@ -303,24 +342,37 @@ const Facturas = () => {
       matchMes = mesFactura === parseInt(mesSeleccionado);
     }
 
-    // Filtros avanzados
+    // Filtros avanzados incluyendo filtros especiales
     let matchFiltrosAvanzados = true;
     if (Object.keys(filtrosAvanzados).length > 0) {
       const filtros = filtrosAvanzados as any;
+      
+      // Filtro especial por fecha de vencimiento exacta
+      if (filtros.fechaVencimiento) {
+        if (factura.vencimiento !== filtros.fechaVencimiento) {
+          matchFiltrosAvanzados = false;
+        }
+      }
+      
+      // Filtro especial por fecha de vencimiento hasta
+      if (filtros.fechaVencimientoHasta) {
+        const fechaVencimiento = new Date(factura.vencimiento.split('/').reverse().join('-'));
+        const fechaLimite = new Date(filtros.fechaVencimientoHasta.split('/').reverse().join('-'));
+        const hoy = new Date();
+        
+        if (fechaVencimiento < hoy || fechaVencimiento > fechaLimite) {
+          matchFiltrosAvanzados = false;
+        }
+      }
+      
+      // Filtro por nombre del proveedor
       if (filtros.nombreProveedor && !factura.proveedor.toLowerCase().includes(filtros.nombreProveedor.toLowerCase())) {
         matchFiltrosAvanzados = false;
       }
+      
+      // Filtro por número de factura
       if (filtros.numeroFactura && !factura.id.toLowerCase().includes(filtros.numeroFactura.toLowerCase())) {
         matchFiltrosAvanzados = false;
-      }
-      if (filtros.fechaDesde || filtros.fechaHasta) {
-        const fechaFactura = new Date(factura.fecha.split('/').reverse().join('-'));
-        if (filtros.fechaDesde && fechaFactura < new Date(filtros.fechaDesde)) {
-          matchFiltrosAvanzados = false;
-        }
-        if (filtros.fechaHasta && fechaFactura > new Date(filtros.fechaHasta)) {
-          matchFiltrosAvanzados = false;
-        }
       }
     }
     
@@ -345,21 +397,40 @@ const Facturas = () => {
 
   const mostrarBotonesEdicion = user?.role === 'admin';
 
+  const limpiarFiltroEspecial = () => {
+    setFiltrosAvanzados({});
+    navigate('/facturas', { replace: true });
+    toast({
+      title: "Filtro limpiado",
+      description: "Mostrando todas las facturas",
+    });
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            {user?.role === 'proveedor' ? 'Mis Facturas' : 'Gestión de Facturas'}
+            {user?.role === 'gerente_operativo' ? 'Mis Facturas' : 'Gestión de Facturas'}
           </h1>
           <p className="text-gray-600">
-            {user?.role === 'proveedor' 
+            {user?.role === 'gerente_operativo' 
               ? 'Administra tus facturas enviadas' 
               : 'Administra y rastrea todas las facturas de gerentes operativos'
             }
           </p>
+          {Object.keys(filtrosAvanzados).length > 0 && (filtrosAvanzados as any).descripcion && (
+            <div className="flex items-center gap-2 mt-2">
+              <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                {(filtrosAvanzados as any).descripcion}
+              </Badge>
+              <Button variant="ghost" size="sm" onClick={limpiarFiltroEspecial}>
+                Limpiar filtro
+              </Button>
+            </div>
+          )}
         </div>
-        {(user?.role === 'proveedor' || user?.role === 'admin') && (
+        {(user?.role === 'gerente_operativo' || user?.role === 'admin') && (
           <Button 
             className="bg-blue-600 hover:bg-blue-700"
             onClick={() => setModalNuevaFactura(true)}
