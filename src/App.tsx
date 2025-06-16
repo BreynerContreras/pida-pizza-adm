@@ -44,7 +44,7 @@ const AppRoutes = () => {
         </ProtectedRoute>
       } />
       <Route path="/facturas" element={
-        <ProtectedRoute allowedRoles={['contadora', 'proveedor', 'admin']}>
+        <ProtectedRoute allowedRoles={['contadora', 'gerente_operativo', 'admin']}>
           <Layout>
             <Facturas />
           </Layout>
