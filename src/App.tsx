@@ -29,6 +29,8 @@ const AppRoutes = () => {
   // Redireccionar según el rol del usuario
   const getDefaultRoute = () => {
     if (user?.role === 'admin') return '/inicio';
+    if (user?.role === 'contadora') return '/facturas';
+    if (user?.role === 'gerente_operativo') return '/facturas';
     return '/facturas';
   };
 
