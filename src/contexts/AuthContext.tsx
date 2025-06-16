@@ -12,7 +12,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     {
       id: '1',
       username: 'admin',
-      password: 'admin123',
+      password: 'admin',
       role: 'admin',
       nombre: 'Administrador Principal',
       email: 'admin@pidapizza.com',
@@ -21,7 +21,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     {
       id: '2',
       username: 'contadora',
-      password: 'conta123',
+      password: '12345678',
       role: 'contadora',
       nombre: 'María González',
       email: 'contadora@pidapizza.com',
@@ -29,8 +29,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     },
     {
       id: '3',
-      username: 'gerente_operativo',
-      password: 'gerente123',
+      username: 'proveedor',
+      password: '12345678',
       role: 'gerente_operativo',
       nombre: 'Juan Pérez',
       nombreEmpresa: 'Distribuidora La Rosa',
@@ -64,9 +64,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     if (foundUser) {
       const updatedUser = { ...foundUser, lastAccess: new Date().toISOString() };
-      const updatedUsers = allUsers.map((u: User) => u.id === foundUser.id ? updatedUser : u);
-      
-      localStorage.setItem('users', JSON.stringify(updatedUsers));
       setUser(updatedUser);
       localStorage.setItem('currentUser', JSON.stringify(updatedUser));
       return true;
