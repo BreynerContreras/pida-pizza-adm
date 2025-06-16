@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, AuthContextType } from '../types/auth';
 
@@ -46,8 +47,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const savedUser = localStorage.getItem('currentUser');
     const savedUsers = localStorage.getItem('users');
     
-    if (savedUsers) {
-      setUsers(JSON.parse(savedUsers));
+    // Initialize users in localStorage if they don't exist
+    if (!savedUsers) {
+      localStorage.setItem('users', JSON.stringify(defaultUsers));
     }
     
     if (savedUser) {
@@ -56,16 +58,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const login = (username: string, password: string): boolean => {
-    const foundUser = users.find(u => u.username === username && u.password === password);
+    const savedUsers = localStorage.getItem('users');
+    const allUsers = savedUsers ? JSON.parse(savedUsers) : defaultUsers;
+    const foundUser = allUsers.find((u: User) => u.username === username && u.password === password);
     
     if (foundUser) {
       const updatedUser = { ...foundUser, lastAccess: new Date().toISOString() };
-      const updatedUsers = users.map(u => u.id === foundUser.id ? updatedUser : u);
+      const updatedUsers = allUsers.map((u: User) => u.id === foundUser.id ? updatedUser : u);
       
-      setUsers(updatedUsers);
+      localStorage.setItem('users', JSON.stringify(updatedUsers));
       setUser(updatedUser);
       localStorage.setItem('currentUser', JSON.stringify(updatedUser));
-      localStorage.setItem('users', JSON.stringify(updatedUsers));
       return true;
     }
     return false;

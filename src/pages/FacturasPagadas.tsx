@@ -216,7 +216,7 @@ const FacturasPagadas = () => {
 
   const facturasFiltradas = facturasPagadas.filter(factura => {
     // Filtrar por usuario gerente operativo - solo ve sus facturas
-    if (user?.role === 'proveedor' && factura.proveedor !== (user?.nombre || user?.username)) {
+    if (user?.role === 'gerente_operativo' && factura.proveedor !== (user?.nombre || user?.username)) {
       return false;
     }
 
@@ -280,10 +280,10 @@ const FacturasPagadas = () => {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            {user?.role === 'proveedor' ? 'Mis Facturas Pagadas' : 'Facturas Pagadas'}
+            {user?.role === 'gerente_operativo' ? 'Mis Facturas Pagadas' : 'Facturas Pagadas'}
           </h1>
           <p className="text-gray-600">
-            {user?.role === 'proveedor' 
+            {user?.role === 'gerente_operativo' 
               ? 'Historial de tus facturas pagadas' 
               : 'Historial de todas las facturas pagadas'
             }
