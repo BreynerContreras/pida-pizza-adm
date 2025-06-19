@@ -57,7 +57,7 @@ export function AppSidebar() {
       return [
         {
           title: "Inicio",
-          url: "/",
+          url: "/inicio",
           icon: Home,
         },
         {
