@@ -44,34 +44,44 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   ];
 
   useEffect(() => {
+    console.log('AuthProvider - initializing');
     const savedUser = localStorage.getItem('currentUser');
     const savedUsers = localStorage.getItem('users');
     
     // Initialize users in localStorage if they don't exist
     if (!savedUsers) {
+      console.log('AuthProvider - initializing default users in localStorage');
       localStorage.setItem('users', JSON.stringify(defaultUsers));
     }
     
     if (savedUser) {
+      console.log('AuthProvider - restoring saved user');
       setUser(JSON.parse(savedUser));
     }
   }, []);
 
   const login = (username: string, password: string): boolean => {
+    console.log('AuthProvider - attempting login for:', username);
     const savedUsers = localStorage.getItem('users');
     const allUsers = savedUsers ? JSON.parse(savedUsers) : defaultUsers;
+    console.log('AuthProvider - available users:', allUsers.map(u => ({ username: u.username, role: u.role })));
+    
     const foundUser = allUsers.find((u: User) => u.username === username && u.password === password);
     
     if (foundUser) {
+      console.log('AuthProvider - login successful for user:', foundUser.username, 'with role:', foundUser.role);
       const updatedUser = { ...foundUser, lastAccess: new Date().toISOString() };
       setUser(updatedUser);
       localStorage.setItem('currentUser', JSON.stringify(updatedUser));
       return true;
     }
+    
+    console.log('AuthProvider - login failed for:', username);
     return false;
   };
 
   const logout = () => {
+    console.log('AuthProvider - logging out');
     setUser(null);
     localStorage.removeItem('currentUser');
   };

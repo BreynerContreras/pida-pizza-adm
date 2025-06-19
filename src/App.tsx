@@ -20,13 +20,11 @@ const queryClient = new QueryClient();
 const AppContent = () => {
   const { user, isAuthenticated } = useAuth();
 
-  // Si no está autenticado, mostrar login
-  if (!isAuthenticated) {
-    return <Login />;
-  }
+  console.log('AppContent - isAuthenticated:', isAuthenticated);
+  console.log('AppContent - user:', user);
 
-  // Redireccionar según el rol del usuario
   const getDefaultRoute = () => {
+    console.log('Getting default route for user role:', user?.role);
     if (user?.role === 'admin') return '/inicio';
     if (user?.role === 'contadora') return '/facturas';
     if (user?.role === 'gerente_operativo') return '/facturas';
@@ -36,43 +34,50 @@ const AppContent = () => {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
-      <Route path="/" element={<Navigate to={getDefaultRoute()} replace />} />
-      <Route path="/inicio" element={
-        <ProtectedRoute allowedRoles={['admin']}>
-          <Layout>
-            <Dashboard />
-          </Layout>
-        </ProtectedRoute>
-      } />
-      <Route path="/facturas" element={
-        <ProtectedRoute allowedRoles={['contadora', 'gerente_operativo', 'admin']}>
-          <Layout>
-            <Facturas />
-          </Layout>
-        </ProtectedRoute>
-      } />
-      <Route path="/facturas-pagadas" element={
-        <ProtectedRoute allowedRoles={['contadora', 'admin']}>
-          <Layout>
-            <FacturasPagadas />
-          </Layout>
-        </ProtectedRoute>
-      } />
-      <Route path="/proveedores" element={
-        <ProtectedRoute allowedRoles={['admin']}>
-          <Layout>
-            <Proveedores />
-          </Layout>
-        </ProtectedRoute>
-      } />
-      <Route path="/usuarios" element={
-        <ProtectedRoute allowedRoles={['admin']}>
-          <Layout>
-            <Usuarios />
-          </Layout>
-        </ProtectedRoute>
-      } />
-      <Route path="*" element={<NotFound />} />
+      
+      {!isAuthenticated ? (
+        <Route path="*" element={<Login />} />
+      ) : (
+        <>
+          <Route path="/" element={<Navigate to={getDefaultRoute()} replace />} />
+          <Route path="/inicio" element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <Layout>
+                <Dashboard />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/facturas" element={
+            <ProtectedRoute allowedRoles={['contadora', 'gerente_operativo', 'admin']}>
+              <Layout>
+                <Facturas />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/facturas-pagadas" element={
+            <ProtectedRoute allowedRoles={['contadora', 'admin']}>
+              <Layout>
+                <FacturasPagadas />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/proveedores" element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <Layout>
+                <Proveedores />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/usuarios" element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <Layout>
+                <Usuarios />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="*" element={<NotFound />} />
+        </>
+      )}
     </Routes>
   );
 };

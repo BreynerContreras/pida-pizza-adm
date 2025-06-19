@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import Login from '../pages/Login';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -11,9 +10,14 @@ interface ProtectedRouteProps {
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles }) => {
   const { isAuthenticated, user } = useAuth();
 
-  // Si no está autenticado, mostrar login
-  if (!isAuthenticated) {
-    return <Login />;
+  console.log('ProtectedRoute - isAuthenticated:', isAuthenticated);
+  console.log('ProtectedRoute - user:', user);
+  console.log('ProtectedRoute - allowedRoles:', allowedRoles);
+
+  // Si no está autenticado, no debería llegar aquí por la lógica en App.tsx
+  if (!isAuthenticated || !user) {
+    console.log('ProtectedRoute - redirecting to login');
+    return null;
   }
 
   // Si no hay roles especificados, permitir acceso
@@ -22,7 +26,8 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles 
   }
 
   // Verificar si el usuario tiene el rol permitido
-  if (user && !allowedRoles.includes(user.role)) {
+  if (!allowedRoles.includes(user.role)) {
+    console.log('ProtectedRoute - access denied for role:', user.role);
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="text-center">
@@ -34,6 +39,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles 
     );
   }
 
+  console.log('ProtectedRoute - access granted');
   return <>{children}</>;
 };
 
