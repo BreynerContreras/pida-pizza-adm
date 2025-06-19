@@ -79,8 +79,8 @@ const Login = () => {
           <div className="mt-6 text-sm text-gray-600">
             <p className="font-medium mb-2">Usuarios de prueba:</p>
             <ul className="space-y-1">
-              <li>• <strong>Contadora:</strong> Contadora / 12345678</li>
-              <li>• <strong>Proveedor:</strong> proveedor / 12345678</li>
+              <li>• <strong>Contadora:</strong> contadora / 12345678</li>
+              <li>• <strong>Gerente Operativo:</strong> gerente_operativo / 12345678</li>
               <li>• <strong>Admin:</strong> admin / admin</li>
             </ul>
           </div>
