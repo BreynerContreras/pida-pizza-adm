@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, AuthContextType } from '../types/auth';
 
@@ -29,8 +28,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     },
     {
       id: '3',
-      username: 'Gerente operativo',
-      password: '12345678',
+      username: 'GerenteOperativo',
+      password: 'gerente123',
       role: 'gerente_operativo',
       nombre: 'Juan Pérez',
       nombreEmpresa: 'Distribuidora La Rosa',
