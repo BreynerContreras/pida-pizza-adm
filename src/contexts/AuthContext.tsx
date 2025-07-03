@@ -29,7 +29,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     },
     {
       id: '3',
-      username: 'gerente_operativo',
+      username: 'Gerente operativo',
       password: '12345678',
       role: 'gerente_operativo',
       nombre: 'Juan Pérez',
