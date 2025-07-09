@@ -65,8 +65,8 @@ const NuevoGerenteModal: React.FC<NuevoGerenteModalProps> = ({
 
     onSave(formData);
     toast({
-      title: "Gerente operativo creado",
-      description: "El nuevo gerente operativo ha sido registrado exitosamente.",
+      title: "Proveedor creado",
+      description: "El nuevo proveedor ha sido registrado exitosamente.",
     });
     
     // Limpiar formulario
@@ -96,7 +96,7 @@ const NuevoGerenteModal: React.FC<NuevoGerenteModalProps> = ({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Nuevo Gerente Operativo</DialogTitle>
+          <DialogTitle>Nuevo Proveedor</DialogTitle>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -186,7 +186,7 @@ const NuevoGerenteModal: React.FC<NuevoGerenteModalProps> = ({
             Cancelar
           </Button>
           <Button type="submit" onClick={handleSubmit}>
-            Crear Gerente Operativo
+            Crear Proveedor
           </Button>
         </DialogFooter>
       </DialogContent>
