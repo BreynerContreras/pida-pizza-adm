@@ -71,7 +71,7 @@ export function AppSidebar() {
           icon: CheckCircle,
         },
         {
-          title: "Gerentes Operativos",
+          title: "Proveedores",
           url: "/proveedores",
           icon: Building2,
         }

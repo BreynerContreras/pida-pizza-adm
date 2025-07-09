@@ -212,15 +212,15 @@ const Proveedores = () => {
       {/* Encabezado */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Gestión de Gerentes Operativos</h1>
-          <p className="text-gray-600">Administra la información de todos los gerentes operativos</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Gestión de Proveedores</h1>
+          <p className="text-gray-600">Administra la información de todos los proveedores</p>
         </div>
         <Button 
           className="bg-blue-600 hover:bg-blue-700"
           onClick={() => setModalNuevo(true)}
         >
           <Plus className="w-4 h-4 mr-2" />
-          Nuevo Gerente Operativo
+          Nuevo Proveedor
         </Button>
       </div>
 
@@ -229,7 +229,7 @@ const Proveedores = () => {
         <Card className="p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Total Gerentes Operativos</p>
+              <p className="text-sm text-gray-600">Total Proveedores</p>
               <p className="text-2xl font-bold text-gray-900">{gerentesList.length}</p>
             </div>
             <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
