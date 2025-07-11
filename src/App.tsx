@@ -35,9 +35,7 @@ const AppContent = () => {
     <Routes>
       <Route path="/login" element={<Login />} />
       
-      {!isAuthenticated ? (
-        <Route path="*" element={<Login />} />
-      ) : (
+      {isAuthenticated ? (
         <>
           <Route path="/" element={<Navigate to={getDefaultRoute()} replace />} />
           <Route path="/inicio" element={
@@ -76,6 +74,11 @@ const AppContent = () => {
             </ProtectedRoute>
           } />
           <Route path="*" element={<NotFound />} />
+        </>
+      ) : (
+        <>
+          <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route path="*" element={<Navigate to="/login" replace />} />
         </>
       )}
     </Routes>
