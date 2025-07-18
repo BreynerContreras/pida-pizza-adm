@@ -122,7 +122,7 @@ const EditarFacturaModal: React.FC<EditarFacturaModalProps> = ({
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="proveedor">Gerente Operativo *</Label>
+              <Label htmlFor="proveedor">Nombre del Proveedor *</Label>
               <Input
                 id="proveedor"
                 value={formData.proveedor}
