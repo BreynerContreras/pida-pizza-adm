@@ -170,6 +170,7 @@ const Facturas = () => {
   };
 
   const agregarFactura = (facturaData: any) => {
+    console.log('Agregando factura:', facturaData);
     const nuevaFactura = {
       id: `FAC-${new Date().getFullYear()}-${String(facturasList.length + 1).padStart(3, '0')}`,
       ...facturaData,
@@ -177,8 +178,14 @@ const Facturas = () => {
       fecha: new Date(facturaData.fecha).toLocaleDateString('es-ES')
     };
     
+    console.log('Nueva factura creada:', nuevaFactura);
     const nuevasFacturas = [...facturasList, nuevaFactura];
     guardarFacturas(nuevasFacturas);
+    
+    toast({
+      title: "Factura creada",
+      description: "La factura ha sido creada exitosamente.",
+    });
   };
 
   const editarFactura = (facturaEditada: any) => {

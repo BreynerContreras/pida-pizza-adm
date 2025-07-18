@@ -34,11 +34,11 @@ const NuevaFacturaModal: React.FC<NuevaFacturaModalProps> = ({ isOpen, onClose, 
     
     const facturaData = {
       ...formData,
-      proveedor: user?.nombre || user?.username,
+      proveedor: user?.role === 'gerente_operativo' ? user?.nombreEmpresa : (user?.nombre || user?.username),
       rif: user?.rif || '',
       estado: 'pendiente',
-      categoria: 'General',
-      vencimiento: new Date(new Date(formData.fecha).getTime() + 15 * 24 * 60 * 60 * 1000).toLocaleDateString()
+      categoria: user?.categoria || 'General',
+      vencimiento: new Date(new Date(formData.fecha).getTime() + 15 * 24 * 60 * 60 * 1000).toLocaleDateString('es-ES')
     };
     
     onSubmit(facturaData);
