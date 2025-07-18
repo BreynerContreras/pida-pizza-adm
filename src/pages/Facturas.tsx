@@ -324,7 +324,7 @@ const Facturas = () => {
     }
 
     // Filtrar por usuario gerente operativo - solo ve sus facturas
-    if (user?.role === 'gerente_operativo' && factura.proveedor !== (user?.nombre || user?.username)) {
+    if (user?.role === 'gerente_operativo' && factura.proveedor !== user?.nombreEmpresa) {
       return false;
     }
 
