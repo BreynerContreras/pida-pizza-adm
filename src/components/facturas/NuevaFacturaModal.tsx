@@ -34,7 +34,7 @@ const NuevaFacturaModal: React.FC<NuevaFacturaModalProps> = ({ isOpen, onClose, 
     
     const facturaData = {
       ...formData,
-      proveedor: user?.role === 'gerente_operativo' ? user?.nombreEmpresa : (user?.nombre || user?.username),
+      proveedor: formData.nombreEmpresa,
       rif: user?.rif || '',
       estado: 'pendiente',
       categoria: user?.categoria || 'General',
