@@ -55,7 +55,8 @@ const facturas = [
     vencimiento: "30/06/2024",
     estado: "pendiente",
     categoria: "Carnes y Embutidos",
-    descripcion: "Suministro de carnes frescas para restaurantes"
+    descripcion: "Suministro de carnes frescas para restaurantes",
+    createdBy: "3"
   },
   {
     id: "FAC-2024-002",
@@ -66,7 +67,8 @@ const facturas = [
     vencimiento: "29/06/2024",
     estado: "aprobado",
     categoria: "Carnes y Embutidos",
-    descripcion: "Cortes premium para menú especial"
+    descripcion: "Cortes premium para menú especial",
+    createdBy: "3"
   },
   {
     id: "FAC-2024-003",
@@ -77,7 +79,8 @@ const facturas = [
     vencimiento: "28/06/2024",
     estado: "revision",
     categoria: "Lácteos",
-    descripcion: "Quesos mozzarella y parmesano"
+    descripcion: "Quesos mozzarella y parmesano",
+    createdBy: "1"
   },
   {
     id: "FAC-2024-004",
@@ -88,7 +91,8 @@ const facturas = [
     vencimiento: "27/06/2024",
     estado: "pendiente",
     categoria: "Vegetales",
-    descripcion: "Vegetales orgánicos variados"
+    descripcion: "Vegetales orgánicos variados",
+    createdBy: "1"
   },
   {
     id: "FAC-2024-005",
@@ -99,7 +103,8 @@ const facturas = [
     vencimiento: "26/06/2024",
     estado: "pendiente",
     categoria: "Harinas y Panadería",
-    descripción: "Masa para pizza y pan de ajo"
+    descripción: "Masa para pizza y pan de ajo",
+    createdBy: "1"
   }
 ];
 
@@ -330,8 +335,8 @@ const Facturas = () => {
       return false;
     }
 
-    // Filtrar por usuario gerente operativo - solo ve sus facturas
-    if (user?.role === 'gerente_operativo' && factura.proveedor !== user?.nombreEmpresa) {
+    // Filtrar por usuario gerente operativo - solo ve las facturas que él creó
+    if (user?.role === 'gerente_operativo' && factura.createdBy !== user?.id) {
       return false;
     }
 

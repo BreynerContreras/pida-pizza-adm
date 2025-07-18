@@ -38,7 +38,8 @@ const NuevaFacturaModal: React.FC<NuevaFacturaModalProps> = ({ isOpen, onClose, 
       rif: user?.rif || '',
       estado: 'pendiente',
       categoria: user?.categoria || 'General',
-      vencimiento: new Date(new Date(formData.fecha).getTime() + 15 * 24 * 60 * 60 * 1000).toLocaleDateString('es-ES')
+      vencimiento: new Date(new Date(formData.fecha).getTime() + 15 * 24 * 60 * 60 * 1000).toLocaleDateString('es-ES'),
+      createdBy: user?.id
     };
     
     onSubmit(facturaData);
