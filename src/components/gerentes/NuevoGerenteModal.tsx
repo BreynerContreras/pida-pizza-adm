@@ -139,7 +139,7 @@ const NuevoGerenteModal: React.FC<NuevoGerenteModalProps> = ({
                 id="telefono"
                 value={formData.telefono}
                 onChange={(e) => setFormData({ ...formData, telefono: e.target.value })}
-                placeholder="Ej: +507 6789-1234"
+                placeholder="Ej: +58 6789-1234"
                 required
               />
             </div>
@@ -176,7 +176,7 @@ const NuevoGerenteModal: React.FC<NuevoGerenteModalProps> = ({
               id="direccion"
               value={formData.direccion}
               onChange={(e) => setFormData({ ...formData, direccion: e.target.value })}
-              placeholder="Ej: Vía España, Ciudad de Panamá"
+              placeholder="Ej: villa rosa"
             />
           </div>
         </form>
