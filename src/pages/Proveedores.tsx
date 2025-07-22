@@ -120,9 +120,6 @@ const getStatusColor = (estado: string) => {
   }
 };
 
-const getRatingStars = (rating: number) => {
-  return '★'.repeat(Math.floor(rating)) + '☆'.repeat(5 - Math.floor(rating));
-};
 
 const Proveedores = () => {
   const { toast } = useToast();
@@ -173,7 +170,7 @@ const Proveedores = () => {
       facturas: 0,
       montoTotal: 'B/. 0.00',
       fechaRegistro: new Date().toLocaleDateString('es-ES'),
-      rating: 0
+      
     };
     
     const nuevosGerentes = [...gerentesList, nuevoGerente];
@@ -353,9 +350,6 @@ const Proveedores = () => {
                   <p className="text-xs text-gray-600">{gerente.categoria}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm font-medium text-gray-900">
-                    {getRatingStars(gerente.rating)} {gerente.rating}
-                  </p>
                   <p className="text-xs text-gray-600">Desde {gerente.fechaRegistro}</p>
                 </div>
               </div>
