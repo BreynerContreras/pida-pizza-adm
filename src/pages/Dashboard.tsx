@@ -122,13 +122,6 @@ const Dashboard = () => {
               </div>
             )}
             
-            <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
-              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-blue-800">3 nuevos gerentes operativos</p>
-                <p className="text-xs text-blue-600">Pendientes de validación</p>
-              </div>
-            </div>
           </CardContent>
         </Card>
       </div>
