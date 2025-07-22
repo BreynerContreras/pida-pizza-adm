@@ -5,9 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from '../contexts/AuthContext';
+import { useNotifications } from '../hooks/useNotifications';
 
 export const Header = () => {
   const { user, logout } = useAuth();
+  const { total } = useNotifications();
 
   return (
     <header className="bg-white border-b border-gray-200 px-6 py-4">
@@ -28,9 +30,11 @@ export const Header = () => {
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="sm" className="relative">
             <Bell className="w-5 h-5" />
-            <Badge className="absolute -top-2 -right-2 w-5 h-5 p-0 bg-red-500 text-white text-xs flex items-center justify-center">
-              3
-            </Badge>
+            {total > 0 && (
+              <Badge className="absolute -top-2 -right-2 w-5 h-5 p-0 bg-red-500 text-white text-xs flex items-center justify-center">
+                {total}
+              </Badge>
+            )}
           </Button>
           
           <div className="text-right">

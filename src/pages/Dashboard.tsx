@@ -10,9 +10,11 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { useNavigate } from 'react-router-dom';
+import { useNotifications } from '../hooks/useNotifications';
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const { facturas_vencen_hoy, facturas_por_vencer } = useNotifications();
 
   const navegarAFacturasVencenHoy = () => {
     navigate('/facturas?filtro=vencen_hoy');
@@ -80,27 +82,45 @@ const Dashboard = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div 
-              className="flex items-center gap-3 p-3 bg-red-50 rounded-lg cursor-pointer hover:bg-red-100 transition-colors"
-              onClick={navegarAFacturasVencenHoy}
-            >
-              <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-red-800">15 facturas vencen hoy</p>
-                <p className="text-xs text-red-600">Requieren atención inmediata - Click para ver</p>
+            {facturas_vencen_hoy > 0 && (
+              <div 
+                className="flex items-center gap-3 p-3 bg-red-50 rounded-lg cursor-pointer hover:bg-red-100 transition-colors"
+                onClick={navegarAFacturasVencenHoy}
+              >
+                <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-red-800">
+                    {facturas_vencen_hoy} factura{facturas_vencen_hoy > 1 ? 's' : ''} vence{facturas_vencen_hoy > 1 ? 'n' : ''} hoy
+                  </p>
+                  <p className="text-xs text-red-600">Requieren atención inmediata - Click para ver</p>
+                </div>
               </div>
-            </div>
+            )}
             
-            <div 
-              className="flex items-center gap-3 p-3 bg-yellow-50 rounded-lg cursor-pointer hover:bg-yellow-100 transition-colors"
-              onClick={navegarAFacturasPorVencer}
-            >
-              <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-yellow-800">8 facturas por vencer</p>
-                <p className="text-xs text-yellow-600">En los próximos 3 días - Click para ver</p>
+            {facturas_por_vencer > 0 && (
+              <div 
+                className="flex items-center gap-3 p-3 bg-yellow-50 rounded-lg cursor-pointer hover:bg-yellow-100 transition-colors"
+                onClick={navegarAFacturasPorVencer}
+              >
+                <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-yellow-800">
+                    {facturas_por_vencer} factura{facturas_por_vencer > 1 ? 's' : ''} por vencer
+                  </p>
+                  <p className="text-xs text-yellow-600">En los próximos 3 días - Click para ver</p>
+                </div>
               </div>
-            </div>
+            )}
+
+            {facturas_vencen_hoy === 0 && facturas_por_vencer === 0 && (
+              <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-green-800">No hay facturas por vencer</p>
+                  <p className="text-xs text-green-600">Todas las facturas están al día</p>
+                </div>
+              </div>
+            )}
             
             <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
               <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
