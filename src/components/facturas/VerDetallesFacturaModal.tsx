@@ -18,7 +18,8 @@ import {
   Phone,
   User,
   CreditCard,
-  History
+  History,
+  Image
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -33,6 +34,7 @@ interface FacturaDetalle {
   categoria: string;
   descripcion: string;
   created_by?: string;
+  imagen_url?: string;
 }
 
 interface CreadorInfo {
@@ -335,6 +337,27 @@ const VerDetallesFacturaModal: React.FC<VerDetallesFacturaModalProps> = ({
               ))}
             </div>
           </div>
+
+          {/* Imagen de la Factura */}
+          {factura.imagen_url && (
+            <div className="border border-gray-200 rounded-lg p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Image className="w-5 h-5 text-blue-600" />
+                <h4 className="font-semibold text-gray-900">Imagen de la Factura</h4>
+              </div>
+              <div className="bg-gray-50 rounded-lg p-4">
+                <img 
+                  src={factura.imagen_url} 
+                  alt="Imagen de la factura" 
+                  className="max-w-full h-auto rounded-lg border border-gray-300 shadow-sm cursor-pointer hover:shadow-md transition-shadow duration-200"
+                  onClick={() => window.open(factura.imagen_url, '_blank')}
+                />
+                <p className="text-sm text-gray-600 mt-2 text-center">
+                  Haz clic en la imagen para verla en tamaño completo
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* Descripción */}
           <div className="border border-gray-200 rounded-lg p-4">
