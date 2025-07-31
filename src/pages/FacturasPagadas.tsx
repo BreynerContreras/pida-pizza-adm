@@ -240,7 +240,7 @@ const FacturasPagadas = () => {
     value: "11",
     label: "Diciembre"
   }];
-  const mostrarBotonesEdicion = user?.role === 'admin';
+  const mostrarBotonesEdicion = false;
   return <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
