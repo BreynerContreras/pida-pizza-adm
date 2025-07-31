@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -15,8 +15,12 @@ import {
   Tag,
   ClipboardList,
   Mail,
-  Phone
+  Phone,
+  User,
+  CreditCard,
+  History
 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface FacturaDetalle {
   id: string;
@@ -28,6 +32,23 @@ interface FacturaDetalle {
   estado: string;
   categoria: string;
   descripcion: string;
+  created_by?: string;
+}
+
+interface CreadorInfo {
+  nombre: string;
+  role: string;
+  username: string;
+}
+
+interface Pago {
+  id: string;
+  monto_pagado: number;
+  fecha_pago: string;
+  descripcion_pago?: string;
+  comprobante_url: string;
+  created_by: string;
+  creador?: CreadorInfo;
 }
 
 interface VerDetallesFacturaModalProps {
@@ -52,6 +73,73 @@ const VerDetallesFacturaModal: React.FC<VerDetallesFacturaModalProps> = ({
   onClose,
   factura
 }) => {
+  const [creadorInfo, setCreadorInfo] = useState<CreadorInfo | null>(null);
+  const [pagos, setPagos] = useState<Pago[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (factura && isOpen) {
+      cargarDatosAdicionales();
+    }
+  }, [factura, isOpen]);
+
+  const cargarDatosAdicionales = async () => {
+    if (!factura) return;
+    
+    setLoading(true);
+    try {
+      // Cargar información del creador de la factura
+      if (factura.created_by) {
+        const { data: creador } = await supabase
+          .from('profiles')
+          .select('nombre, role, username')
+          .eq('user_id', factura.created_by)
+          .single();
+        
+        if (creador) {
+          setCreadorInfo(creador);
+        }
+      }
+
+      // Cargar pagos de la factura con información de quién los creó
+      const { data: pagosData } = await supabase
+        .from('payments')
+        .select(`
+          id,
+          monto_pagado,
+          fecha_pago,
+          descripcion_pago,
+          comprobante_url,
+          created_by
+        `)
+        .eq('invoice_id', factura.id);
+
+      if (pagosData) {
+        // Cargar información de los creadores de cada pago
+        const pagosConCreador = await Promise.all(
+          pagosData.map(async (pago) => {
+            const { data: creadorPago } = await supabase
+              .from('profiles')
+              .select('nombre, role, username')
+              .eq('user_id', pago.created_by)
+              .single();
+            
+            return {
+              ...pago,
+              creador: creadorPago || undefined
+            };
+          })
+        );
+        
+        setPagos(pagosConCreador);
+      }
+    } catch (error) {
+      console.error('Error cargando datos adicionales:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (!factura) return null;
 
   return (
@@ -130,6 +218,121 @@ const VerDetallesFacturaModal: React.FC<VerDetallesFacturaModalProps> = ({
                 <p className="text-sm font-medium text-gray-600">Fecha de Vencimiento</p>
                 <p className="text-gray-900">{factura.vencimiento}</p>
               </div>
+            </div>
+          </div>
+
+          {/* Información del Creador de la Factura */}
+          {creadorInfo && (
+            <div className="border border-gray-200 rounded-lg p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <User className="w-5 h-5 text-indigo-600" />
+                <h4 className="font-semibold text-gray-900">Creado por</h4>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Nombre</p>
+                  <p className="text-gray-900">{creadorInfo.nombre || 'N/A'}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Usuario</p>
+                  <p className="text-gray-900">{creadorInfo.username}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Rol</p>
+                  <Badge variant="outline" className="w-fit">
+                    {creadorInfo.role === 'admin' ? 'Administrador' : 
+                     creadorInfo.role === 'contadora' ? 'Contadora' : 
+                     'Gerente Operativo'}
+                  </Badge>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Pagos Registrados por el Administrador */}
+          {pagos.length > 0 && (
+            <div className="border border-gray-200 rounded-lg p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <CreditCard className="w-5 h-5 text-emerald-600" />
+                <h4 className="font-semibold text-gray-900">Pagos Registrados</h4>
+              </div>
+              <div className="space-y-3">
+                {pagos.map((pago) => (
+                  <div key={pago.id} className="bg-emerald-50 border border-emerald-200 rounded-lg p-3">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">Monto Pagado</p>
+                        <p className="text-lg font-semibold text-emerald-700">
+                          B/. {pago.monto_pagado.toLocaleString()}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">Fecha de Pago</p>
+                        <p className="text-gray-900">{new Date(pago.fecha_pago).toLocaleDateString('es-ES')}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">Registrado por</p>
+                        <p className="text-gray-900">
+                          {pago.creador?.nombre || 'Usuario no encontrado'}
+                        </p>
+                        {pago.creador && (
+                          <Badge variant="outline" className="text-xs mt-1">
+                            {pago.creador.role === 'admin' ? 'Admin' : 
+                             pago.creador.role === 'contadora' ? 'Contadora' : 
+                             'Gerente'}
+                          </Badge>
+                        )}
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">Comprobante</p>
+                        {pago.comprobante_url ? (
+                          <a 
+                            href={pago.comprobante_url} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:text-blue-800 text-sm underline"
+                          >
+                            Ver comprobante
+                          </a>
+                        ) : (
+                          <p className="text-gray-500 text-sm">Sin comprobante</p>
+                        )}
+                      </div>
+                    </div>
+                    {pago.descripcion_pago && (
+                      <div className="mt-2 pt-2 border-t border-emerald-200">
+                        <p className="text-sm font-medium text-gray-600">Descripción</p>
+                        <p className="text-gray-700 text-sm">{pago.descripcion_pago}</p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Historial de Actividad */}
+          <div className="border border-gray-200 rounded-lg p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <History className="w-5 h-5 text-gray-600" />
+              <h4 className="font-semibold text-gray-900">Historial de Actividad</h4>
+            </div>
+            <div className="space-y-2">
+              {creadorInfo && (
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  <span>Factura creada por {creadorInfo.nombre || creadorInfo.username}</span>
+                </div>
+              )}
+              {pagos.map((pago) => (
+                <div key={`history-${pago.id}`} className="flex items-center gap-2 text-sm text-gray-600">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <span>
+                    Pago de B/. {pago.monto_pagado.toLocaleString()} registrado por {pago.creador?.nombre || 'Usuario'}
+                    {' '}el {new Date(pago.fecha_pago).toLocaleDateString('es-ES')}
+                  </span>
+                </div>
+              ))}
             </div>
           </div>
 
