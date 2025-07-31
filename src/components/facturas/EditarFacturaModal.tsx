@@ -24,7 +24,7 @@ interface FacturaData {
   id: string;
   proveedor: string;
   rif: string;
-  monto: string;
+  monto: string | number;
   fecha: string;
   vencimiento: string;
   estado: string;
@@ -60,8 +60,11 @@ const EditarFacturaModal: React.FC<EditarFacturaModalProps> = ({
 
   useEffect(() => {
     if (factura) {
-      // Convertir el monto de "B/. 2,450.00" a "2450.00"
-      const montoNumerico = factura.monto.replace('B/. ', '').replace(',', '');
+      // Manejar el monto que puede venir como string formateado o como número
+      const montoNumerico = typeof factura.monto === 'string' 
+        ? factura.monto.replace('B/. ', '').replace(',', '')
+        : factura.monto.toString();
+      
       // Convertir fechas al formato YYYY-MM-DD para el input date
       const fechaISO = factura.fecha.split('/').reverse().join('-');
       const vencimientoISO = factura.vencimiento.split('/').reverse().join('-');
@@ -90,7 +93,7 @@ const EditarFacturaModal: React.FC<EditarFacturaModalProps> = ({
     // Formatear los datos antes de guardar
     const facturaEditada = {
       ...formData,
-      monto: `B/. ${parseFloat(formData.monto).toLocaleString()}`,
+      monto: `B/. ${parseFloat(formData.monto.toString()).toLocaleString()}`,
       fecha: new Date(formData.fecha).toLocaleDateString('es-ES'),
       vencimiento: new Date(formData.vencimiento).toLocaleDateString('es-ES')
     };
