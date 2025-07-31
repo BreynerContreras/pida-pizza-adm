@@ -31,6 +31,11 @@ export function AppSidebar() {
     if (user?.role === 'contadora') {
       return [
         {
+          title: "Inicio",
+          url: "/inicio",
+          icon: Home,
+        },
+        {
           title: "Facturas",
           url: "/facturas",
           icon: FileText,

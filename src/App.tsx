@@ -26,7 +26,7 @@ const AppContent = () => {
   const getDefaultRoute = () => {
     console.log('Getting default route for user role:', user?.role);
     if (user?.role === 'admin') return '/inicio';
-    if (user?.role === 'contadora') return '/facturas';
+    if (user?.role === 'contadora') return '/inicio';
     if (user?.role === 'gerente_operativo') return '/facturas';
     return '/facturas';
   };
@@ -39,7 +39,7 @@ const AppContent = () => {
         <>
           <Route path="/" element={<Navigate to={getDefaultRoute()} replace />} />
           <Route path="/inicio" element={
-            <ProtectedRoute allowedRoles={['admin']}>
+            <ProtectedRoute allowedRoles={['admin', 'contadora']}>
               <Layout>
                 <Dashboard />
               </Layout>
