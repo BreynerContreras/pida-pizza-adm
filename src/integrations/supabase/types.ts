@@ -14,7 +14,152 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      invoices: {
+        Row: {
+          created_at: string
+          created_by: string
+          descripcion: string
+          estado: string
+          fecha: string
+          id: string
+          imagen_url: string | null
+          limite_pago: string
+          monto: number
+          nombre_empresa: string
+          numero_factura: string
+          proveedor: string
+          rif: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          descripcion: string
+          estado?: string
+          fecha: string
+          id?: string
+          imagen_url?: string | null
+          limite_pago: string
+          monto: number
+          nombre_empresa: string
+          numero_factura: string
+          proveedor: string
+          rif?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          descripcion?: string
+          estado?: string
+          fecha?: string
+          id?: string
+          imagen_url?: string | null
+          limite_pago?: string
+          monto?: number
+          nombre_empresa?: string
+          numero_factura?: string
+          proveedor?: string
+          rif?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      payments: {
+        Row: {
+          comprobante_url: string
+          created_at: string
+          created_by: string
+          descripcion_pago: string | null
+          fecha_pago: string
+          id: string
+          invoice_id: string
+          monto_pagado: number
+          updated_at: string
+        }
+        Insert: {
+          comprobante_url: string
+          created_at?: string
+          created_by: string
+          descripcion_pago?: string | null
+          fecha_pago: string
+          id?: string
+          invoice_id: string
+          monto_pagado: number
+          updated_at?: string
+        }
+        Update: {
+          comprobante_url?: string
+          created_at?: string
+          created_by?: string
+          descripcion_pago?: string | null
+          fecha_pago?: string
+          id?: string
+          invoice_id?: string
+          monto_pagado?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          categoria: string | null
+          contacto: string | null
+          created_at: string
+          direccion: string | null
+          email: string | null
+          id: string
+          nombre: string | null
+          nombre_empresa: string | null
+          rif: string | null
+          role: string
+          telefono: string | null
+          updated_at: string
+          user_id: string
+          username: string
+        }
+        Insert: {
+          categoria?: string | null
+          contacto?: string | null
+          created_at?: string
+          direccion?: string | null
+          email?: string | null
+          id?: string
+          nombre?: string | null
+          nombre_empresa?: string | null
+          rif?: string | null
+          role: string
+          telefono?: string | null
+          updated_at?: string
+          user_id: string
+          username: string
+        }
+        Update: {
+          categoria?: string | null
+          contacto?: string | null
+          created_at?: string
+          direccion?: string | null
+          email?: string | null
+          id?: string
+          nombre?: string | null
+          nombre_empresa?: string | null
+          rif?: string | null
+          role?: string
+          telefono?: string | null
+          updated_at?: string
+          user_id?: string
+          username?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
