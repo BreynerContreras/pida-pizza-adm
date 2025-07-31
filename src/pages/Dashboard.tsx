@@ -19,7 +19,8 @@ const Dashboard = () => {
   const { 
     totalMontoMensual, 
     montoAprobadas, 
-    montoPendientes, 
+    montoPendientes,
+    totalPendientesMesPasado,
     porcentajeAprobadas, 
     porcentajePendientes,
     loading 
@@ -41,8 +42,8 @@ const Dashboard = () => {
         <p className="text-gray-600">Resumen general del sistema de gestión de facturas</p>
       </div>
 
-      {/* Tarjeta de estadística principal */}
-      <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-1 gap-6 max-w-md">
+      {/* Tarjetas de estadísticas principales */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 max-w-2xl">
         <StatsCard
           title="Total Facturas Mensual"
           value={loading ? "Cargando..." : `Bs. ${totalMontoMensual.toLocaleString('es-VE', { minimumFractionDigits: 2 })}`}
@@ -51,10 +52,19 @@ const Dashboard = () => {
           icon={FileText}
           color="bg-blue-600"
         />
+        
+        <StatsCard
+          title="Pendientes Mes Pasado"
+          value={loading ? "Cargando..." : `Bs. ${totalPendientesMesPasado.toLocaleString('es-VE', { minimumFractionDigits: 2 })}`}
+          change="-8.2%"
+          changeType="negative"
+          icon={AlertTriangle}
+          color="bg-orange-600"
+        />
       </div>
 
-      {/* Segunda fila de métricas */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Métricas de estado */}
+      <div className="grid grid-cols-1 gap-6">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -78,57 +88,6 @@ const Dashboard = () => {
               </span>
             </div>
             <Progress value={porcentajePendientes} className="h-2" />
-            
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <AlertTriangle className="w-5 h-5 text-yellow-600" />
-              Alertas y Notificaciones
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {facturas_vencen_hoy > 0 && (
-              <div 
-                className="flex items-center gap-3 p-3 bg-red-50 rounded-lg cursor-pointer hover:bg-red-100 transition-colors"
-                onClick={navegarAFacturasVencenHoy}
-              >
-                <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-red-800">
-                    {facturas_vencen_hoy} factura{facturas_vencen_hoy > 1 ? 's' : ''} vence{facturas_vencen_hoy > 1 ? 'n' : ''} hoy
-                  </p>
-                  <p className="text-xs text-red-600">Requieren atención inmediata - Click para ver</p>
-                </div>
-              </div>
-            )}
-            
-            {facturas_por_vencer > 0 && (
-              <div 
-                className="flex items-center gap-3 p-3 bg-yellow-50 rounded-lg cursor-pointer hover:bg-yellow-100 transition-colors"
-                onClick={navegarAFacturasPorVencer}
-              >
-                <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-yellow-800">
-                    {facturas_por_vencer} factura{facturas_por_vencer > 1 ? 's' : ''} por vencer
-                  </p>
-                  <p className="text-xs text-yellow-600">En los próximos 3 días - Click para ver</p>
-                </div>
-              </div>
-            )}
-
-            {facturas_vencen_hoy === 0 && facturas_por_vencer === 0 && (
-              <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-green-800">No hay facturas por vencer</p>
-                  <p className="text-xs text-green-600">Todas las facturas están al día</p>
-                </div>
-              </div>
-            )}
             
           </CardContent>
         </Card>
