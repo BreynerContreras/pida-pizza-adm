@@ -65,9 +65,13 @@ const EditarFacturaModal: React.FC<EditarFacturaModalProps> = ({
         ? factura.monto.replace('B/. ', '').replace(',', '')
         : factura.monto.toString();
       
-      // Convertir fechas al formato YYYY-MM-DD para el input date
-      const fechaISO = factura.fecha.split('/').reverse().join('-');
-      const vencimientoISO = factura.vencimiento.split('/').reverse().join('-');
+      // Convertir fechas al formato YYYY-MM-DD para el input date con validación
+      const fechaISO = factura.fecha && typeof factura.fecha === 'string' 
+        ? factura.fecha.split('/').reverse().join('-')
+        : '';
+      const vencimientoISO = factura.vencimiento && typeof factura.vencimiento === 'string'
+        ? factura.vencimiento.split('/').reverse().join('-')
+        : '';
       
       setFormData({
         ...factura,
