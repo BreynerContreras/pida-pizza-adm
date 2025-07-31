@@ -6,10 +6,10 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
 
-  // Usuarios por defecto del sistema
+  // Usuarios por defecto del sistema con UUIDs válidos
   const defaultUsers: User[] = [
     {
-      id: '1',
+      id: '550e8400-e29b-41d4-a716-446655440000',
       username: 'admin',
       password: 'admin',
       role: 'admin',
@@ -18,7 +18,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       telefono: '+507 6000-0000'
     },
     {
-      id: '2',
+      id: '550e8400-e29b-41d4-a716-446655440001',
       username: 'contadora',
       password: '12345678',
       role: 'contadora',
@@ -27,7 +27,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       telefono: '+507 6000-0001'
     },
     {
-      id: '3',
+      id: '550e8400-e29b-41d4-a716-446655440002',
       username: 'GerenteOperativo',
       password: 'gerente123',
       role: 'gerente_operativo',
