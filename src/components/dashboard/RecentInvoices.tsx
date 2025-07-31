@@ -1,36 +1,20 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Eye, MoreHorizontal } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
-const invoices = [
-  {
-    id: "FAC-2024-001",
-    proveedor: "Distribuidora La Rosa",
-    monto: "B/. 2,450.00",
-    fecha: "15/06/2024",
-    estado: "pendiente",
-    vencimiento: "30/06/2024"
-  },
-  {
-    id: "FAC-2024-002",
-    proveedor: "Carnes Premium S.A.",
-    monto: "B/. 1,890.50",
-    fecha: "14/06/2024",
-    estado: "aprobado",
-    vencimiento: "29/06/2024"
-  },
-  {
-    id: "FAC-2024-004",
-    proveedor: "Vegetales Frescos",
-    monto: "B/. 645.80",
-    fecha: "12/06/2024",
-    estado: "pendiente",
-    vencimiento: "27/06/2024"
-  }
-];
+interface Invoice {
+  id: string;
+  numero_factura: string;
+  proveedor: string;
+  monto: number;
+  fecha: string;
+  estado: string;
+  limite_pago: string;
+}
 
 const getStatusColor = (estado: string) => {
   switch (estado) {
@@ -43,6 +27,42 @@ const getStatusColor = (estado: string) => {
 };
 
 export const RecentInvoices = () => {
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchInvoices = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('invoices')
+          .select('*')
+          .in('estado', ['pendiente', 'aprobado'])
+          .order('created_at', { ascending: false })
+          .limit(5);
+
+        if (error) {
+          console.error('Error fetching invoices:', error);
+        } else {
+          setInvoices(data || []);
+        }
+      } catch (error) {
+        console.error('Error:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchInvoices();
+  }, []);
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('es-ES');
+  };
+
+  const formatAmount = (amount: number) => {
+    return `Bs. ${amount.toLocaleString('es-VE', { minimumFractionDigits: 2 })}`;
+  };
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
@@ -50,36 +70,40 @@ export const RecentInvoices = () => {
         <Button variant="outline" size="sm">Ver todas</Button>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
-          {invoices.map((factura) => (
-            <div key={factura.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-              <div className="flex-1">
-                <div className="flex items-center gap-3 mb-2">
-                  <h4 className="font-semibold text-gray-900">{factura.id}</h4>
-                  <Badge className={getStatusColor(factura.estado)} variant="secondary">
-                    {factura.estado.charAt(0).toUpperCase() + factura.estado.slice(1)}
-                  </Badge>
+        {loading ? (
+          <div className="text-center py-4">Cargando...</div>
+        ) : (
+          <div className="space-y-4">
+            {invoices.map((factura) => (
+              <div key={factura.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    <h4 className="font-semibold text-gray-900">{factura.numero_factura}</h4>
+                    <Badge className={getStatusColor(factura.estado)} variant="secondary">
+                      {factura.estado.charAt(0).toUpperCase() + factura.estado.slice(1)}
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-gray-600 mb-1">{factura.proveedor}</p>
+                  <div className="flex items-center gap-4 text-sm text-gray-500">
+                    <span>Fecha: {formatDate(factura.fecha)}</span>
+                    <span>Vence: {formatDate(factura.limite_pago)}</span>
+                  </div>
                 </div>
-                <p className="text-sm text-gray-600 mb-1">{factura.proveedor}</p>
-                <div className="flex items-center gap-4 text-sm text-gray-500">
-                  <span>Fecha: {factura.fecha}</span>
-                  <span>Vence: {factura.vencimiento}</span>
+                <div className="text-right">
+                  <p className="text-lg font-bold text-gray-900 mb-2">{formatAmount(factura.monto)}</p>
+                  <div className="flex gap-2">
+                    <Button variant="ghost" size="sm">
+                      <Eye className="w-4 h-4" />
+                    </Button>
+                    <Button variant="ghost" size="sm">
+                      <MoreHorizontal className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </div>
               </div>
-              <div className="text-right">
-                <p className="text-lg font-bold text-gray-900 mb-2">{factura.monto}</p>
-                <div className="flex gap-2">
-                  <Button variant="ghost" size="sm">
-                    <Eye className="w-4 h-4" />
-                  </Button>
-                  <Button variant="ghost" size="sm">
-                    <MoreHorizontal className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </CardContent>
     </Card>
   );
