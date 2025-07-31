@@ -23,19 +23,11 @@ const invoices = [
     vencimiento: "29/06/2024"
   },
   {
-    id: "FAC-2024-003",
-    proveedor: "Lácteos del Valle",
-    monto: "B/. 875.25",
-    fecha: "13/06/2024",
-    estado: "revision",
-    vencimiento: "28/06/2024"
-  },
-  {
     id: "FAC-2024-004",
     proveedor: "Vegetales Frescos",
     monto: "B/. 645.80",
     fecha: "12/06/2024",
-    estado: "pagado",
+    estado: "pendiente",
     vencimiento: "27/06/2024"
   }
 ];
@@ -44,7 +36,7 @@ const getStatusColor = (estado: string) => {
   switch (estado) {
     case 'pendiente': return 'bg-yellow-100 text-yellow-800';
     case 'aprobado': return 'bg-green-100 text-green-800';
-    case 'revision': return 'bg-blue-100 text-blue-800';
+    
     case 'pagado': return 'bg-gray-100 text-gray-800';
     default: return 'bg-gray-100 text-gray-800';
   }
