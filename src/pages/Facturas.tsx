@@ -144,29 +144,39 @@ const Facturas = () => {
     setFacturasList(nuevasFacturas);
     localStorage.setItem('facturas', JSON.stringify(nuevasFacturas));
   };
-  const cambiarEstadoFactura = (facturaId: string, nuevoEstado: string) => {
-    const nuevasFacturas = facturasList.map(factura => {
-      if (factura.id === facturaId) {
-        return {
-          ...factura,
-          estado: nuevoEstado
-        };
-      }
-      return factura;
-    });
-    guardarFacturas(nuevasFacturas);
+  const cambiarEstadoFactura = async (facturaId: string, nuevoEstado: string) => {
+    try {
+      const { error } = await supabase
+        .from('invoices')
+        .update({ estado: nuevoEstado })
+        .eq('id', facturaId);
 
-    // Si el estado cambia a "pagado", guardar también en facturas pagadas
-    if (nuevoEstado === 'pagado') {
-      const facturasPagadas = JSON.parse(localStorage.getItem('facturasPagadas') || '[]');
-      const facturaPagada = nuevasFacturas.find(f => f.id === facturaId);
-      if (facturaPagada) {
-        facturasPagadas.push(facturaPagada);
-        localStorage.setItem('facturasPagadas', JSON.stringify(facturasPagadas));
+      if (error) throw error;
+
+      // Actualizar el estado local
+      const nuevasFacturas = facturasList.map(factura => {
+        if (factura.id === facturaId) {
+          return {
+            ...factura,
+            estado: nuevoEstado
+          };
+        }
+        return factura;
+      });
+      setFacturasList(nuevasFacturas);
+
+      if (nuevoEstado === 'aprobado') {
+        toast({
+          title: "Factura aprobada",
+          description: "La factura ha sido aprobada y movida a Facturas Pagadas."
+        });
       }
+    } catch (error) {
+      console.error('Error al cambiar estado de factura:', error);
       toast({
-        title: "Factura marcada como pagada",
-        description: "La factura ha sido movida a la sección de Facturas Pagadas."
+        title: "Error",
+        description: "No se pudo cambiar el estado de la factura.",
+        variant: "destructive"
       });
     }
   };
@@ -324,10 +334,10 @@ const Facturas = () => {
     }
   }, [location.search, toast]);
 
-  // Filtrar facturas excluyendo las pagadas (para la página principal)
+  // Filtrar facturas excluyendo las aprobadas (para la página principal)
   const facturasFiltradas = facturasList.filter(factura => {
-    // Excluir facturas pagadas de la página principal
-    if (factura.estado === 'pagado') {
+    // Excluir facturas aprobadas de la página principal
+    if (factura.estado === 'aprobado') {
       return false;
     }
     const matchEstado = filtroEstado === "todos" || factura.estado === filtroEstado;
@@ -479,7 +489,6 @@ const Facturas = () => {
                 <SelectItem value="todos">Todos los estados</SelectItem>
                 <SelectItem value="pendiente">Pendiente</SelectItem>
                 <SelectItem value="aprobado">Aprobado</SelectItem>
-                <SelectItem value="rechazado">Rechazado</SelectItem>
               </SelectContent>
             </Select>
             
@@ -567,8 +576,6 @@ const Facturas = () => {
                         <SelectContent>
                           <SelectItem value="pendiente">Pendiente</SelectItem>
                           <SelectItem value="aprobado">Aprobado</SelectItem>
-                          <SelectItem value="pagado">Pagado</SelectItem>
-                          <SelectItem value="rechazado">Rechazado</SelectItem>
                         </SelectContent>
                       </Select>}
                   </div>
