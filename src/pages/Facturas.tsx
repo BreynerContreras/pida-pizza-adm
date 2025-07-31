@@ -15,7 +15,8 @@ import {
   Building2,
   FileText,
   CheckCircle,
-  DollarSign
+  DollarSign,
+  CreditCard
 } from 'lucide-react';
 import {
   Select,
@@ -41,9 +42,11 @@ import NuevaFacturaModal from '../components/facturas/NuevaFacturaModal';
 import FiltrosAvanzados from '../components/facturas/FiltrosAvanzados';
 import VerDetallesFacturaModal from '../components/facturas/VerDetallesFacturaModal';
 import EditarFacturaModal from '../components/facturas/EditarFacturaModal';
+import RegistrarPagoModal from '../components/facturas/RegistrarPagoModal';
 import jsPDF from 'jspdf';
 import * as XLSX from 'xlsx';
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const facturas = [
   {
@@ -125,7 +128,7 @@ const Facturas = () => {
   const location = useLocation();
   const navigate = useNavigate();
   
-  const [facturasList, setFacturasList] = useState(facturas);
+  const [facturasList, setFacturasList] = useState<any[]>([]);
   const [filtroEstado, setFiltroEstado] = useState("todos");
   const [busqueda, setBusqueda] = useState("");
   const [mesSeleccionado, setMesSeleccionado] = useState("todos");
@@ -133,15 +136,46 @@ const Facturas = () => {
   const [modalFiltros, setModalFiltros] = useState(false);
   const [modalVerDetalles, setModalVerDetalles] = useState(false);
   const [modalEditar, setModalEditar] = useState(false);
+  const [modalRegistrarPago, setModalRegistrarPago] = useState(false);
   const [facturaSeleccionada, setFacturaSeleccionada] = useState<any>(null);
   const [filtrosAvanzados, setFiltrosAvanzados] = useState({});
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const savedFacturas = localStorage.getItem('facturas');
-    if (savedFacturas) {
-      setFacturasList(JSON.parse(savedFacturas));
+    cargarFacturas();
+  }, [user]);
+
+  const cargarFacturas = async () => {
+    if (!user) return;
+    
+    setIsLoading(true);
+    try {
+      let query = supabase
+        .from('invoices')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      // Si es gerente operativo, solo ver sus facturas
+      if (user.role === 'gerente_operativo') {
+        query = query.eq('created_by', user.id);
+      }
+
+      const { data, error } = await query;
+
+      if (error) throw error;
+
+      setFacturasList(data || []);
+    } catch (error) {
+      console.error('Error al cargar facturas:', error);
+      toast({
+        title: "Error",
+        description: "No se pudieron cargar las facturas.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
     }
-  }, []);
+  };
 
   const guardarFacturas = (nuevasFacturas: any[]) => {
     setFacturasList(nuevasFacturas);
@@ -175,22 +209,8 @@ const Facturas = () => {
   };
 
   const agregarFactura = (facturaData: any) => {
-    console.log('Agregando factura:', facturaData);
-    const nuevaFactura = {
-      id: `FAC-${new Date().getFullYear()}-${String(facturasList.length + 1).padStart(3, '0')}`,
-      ...facturaData,
-      monto: `B/. ${facturaData.monto}`,
-      fecha: new Date(facturaData.fecha).toLocaleDateString('es-ES')
-    };
-    
-    console.log('Nueva factura creada:', nuevaFactura);
-    const nuevasFacturas = [...facturasList, nuevaFactura];
-    guardarFacturas(nuevasFacturas);
-    
-    toast({
-      title: "Factura creada",
-      description: "La factura ha sido creada exitosamente.",
-    });
+    // Recargar facturas después de crear una nueva
+    cargarFacturas();
   };
 
   const editarFactura = (facturaEditada: any) => {
@@ -293,6 +313,15 @@ const Facturas = () => {
     setModalEditar(true);
   };
 
+  const abrirModalRegistrarPago = (factura: any) => {
+    setFacturaSeleccionada(factura);
+    setModalRegistrarPago(true);
+  };
+
+  const onPagoRegistrado = () => {
+    cargarFacturas(); // Recargar facturas
+  };
+
   // Detectar filtros especiales desde navegación
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
@@ -335,21 +364,16 @@ const Facturas = () => {
       return false;
     }
 
-    // Filtrar por usuario gerente operativo - solo ve las facturas que él creó
-    if (user?.role === 'gerente_operativo' && factura.createdBy !== user?.id) {
-      return false;
-    }
-
     const matchEstado = filtroEstado === "todos" || factura.estado === filtroEstado;
     const matchBusqueda = busqueda === "" || 
-      factura.id.toLowerCase().includes(busqueda.toLowerCase()) ||
-      factura.proveedor.toLowerCase().includes(busqueda.toLowerCase()) ||
-      factura.rif.toLowerCase().includes(busqueda.toLowerCase());
+      factura.numero_factura?.toLowerCase().includes(busqueda.toLowerCase()) ||
+      factura.proveedor?.toLowerCase().includes(busqueda.toLowerCase()) ||
+      factura.rif?.toLowerCase().includes(busqueda.toLowerCase());
     
     // Filtro por mes
     let matchMes = true;
     if (mesSeleccionado !== "todos") {
-      const fechaFactura = new Date(factura.fecha.split('/').reverse().join('-'));
+      const fechaFactura = new Date(factura.fecha);
       const mesFactura = fechaFactura.getMonth();
       matchMes = mesFactura === parseInt(mesSeleccionado);
     }
@@ -361,14 +385,15 @@ const Facturas = () => {
       
       // Filtro especial por fecha de vencimiento exacta
       if (filtros.fechaVencimiento) {
-        if (factura.vencimiento !== filtros.fechaVencimiento) {
+        const limitePagoFormatted = new Date(factura.limite_pago).toLocaleDateString('es-ES');
+        if (limitePagoFormatted !== filtros.fechaVencimiento) {
           matchFiltrosAvanzados = false;
         }
       }
       
       // Filtro especial por fecha de vencimiento hasta
       if (filtros.fechaVencimientoHasta) {
-        const fechaVencimiento = new Date(factura.vencimiento.split('/').reverse().join('-'));
+        const fechaVencimiento = new Date(factura.limite_pago);
         const fechaLimite = new Date(filtros.fechaVencimientoHasta.split('/').reverse().join('-'));
         const hoy = new Date();
         
@@ -378,12 +403,12 @@ const Facturas = () => {
       }
       
       // Filtro por nombre del proveedor
-      if (filtros.nombreProveedor && !factura.proveedor.toLowerCase().includes(filtros.nombreProveedor.toLowerCase())) {
+      if (filtros.nombreProveedor && !factura.proveedor?.toLowerCase().includes(filtros.nombreProveedor.toLowerCase())) {
         matchFiltrosAvanzados = false;
       }
       
       // Filtro por número de factura
-      if (filtros.numeroFactura && !factura.id.toLowerCase().includes(filtros.numeroFactura.toLowerCase())) {
+      if (filtros.numeroFactura && !factura.numero_factura?.toLowerCase().includes(filtros.numeroFactura.toLowerCase())) {
         matchFiltrosAvanzados = false;
       }
     }
@@ -581,7 +606,7 @@ const Facturas = () => {
               <div key={factura.id} className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-4">
-                    <h3 className="text-lg font-semibold text-gray-900">{factura.id}</h3>
+                    <h3 className="text-lg font-semibold text-gray-900">{factura.numero_factura}</h3>
                     <Badge className={getStatusColor(factura.estado)} variant="outline">
                       {factura.estado.charAt(0).toUpperCase() + factura.estado.slice(1)}
                     </Badge>
@@ -612,16 +637,24 @@ const Facturas = () => {
                     >
                       <Eye className="w-4 h-4" />
                     </Button>
-                    {mostrarBotonesEdicion && (
-                      <>
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => abrirModalEditar(factura)}
-                        >
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                        <AlertDialog>
+                     {mostrarBotonesEdicion && (
+                       <>
+                         <Button 
+                           variant="ghost" 
+                           size="sm"
+                           onClick={() => abrirModalRegistrarPago(factura)}
+                           className="text-blue-600 hover:text-blue-800"
+                         >
+                           <CreditCard className="w-4 h-4" />
+                         </Button>
+                         <Button 
+                           variant="ghost" 
+                           size="sm"
+                           onClick={() => abrirModalEditar(factura)}
+                         >
+                           <Edit className="w-4 h-4" />
+                         </Button>
+                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button 
                               variant="ghost" 
@@ -658,8 +691,7 @@ const Facturas = () => {
                       <span className="text-sm font-medium text-gray-600">Gerente Operativo</span>
                     </div>
                     <p className="font-semibold text-gray-900">{factura.proveedor}</p>
-                    <p className="text-sm text-gray-600">{factura.rif}</p>
-                    <p className="text-sm text-gray-500 mt-1">{factura.categoria}</p>
+                     <p className="text-sm text-gray-600">{factura.rif || 'Sin RIF'}</p>
                   </div>
                   
                   <div>
@@ -667,8 +699,8 @@ const Facturas = () => {
                       <Calendar className="w-4 h-4 text-gray-400" />
                       <span className="text-sm font-medium text-gray-600">Fechas</span>
                     </div>
-                    <p className="text-sm text-gray-900">Emisión: {factura.fecha}</p>
-                    <p className="text-sm text-gray-900">Vencimiento: {factura.vencimiento}</p>
+                     <p className="text-sm text-gray-900">Emisión: {new Date(factura.fecha).toLocaleDateString('es-ES')}</p>
+                     <p className="text-sm text-gray-900">Límite de pago: {new Date(factura.limite_pago).toLocaleDateString('es-ES')}</p>
                   </div>
                   
                   <div>
@@ -676,7 +708,7 @@ const Facturas = () => {
                       <DollarSign className="w-4 h-4 text-gray-400" />
                       <span className="text-sm font-medium text-gray-600">Monto</span>
                     </div>
-                    <p className="text-2xl font-bold text-gray-900">{factura.monto}</p>
+                    <p className="text-2xl font-bold text-gray-900">B/. {factura.monto?.toLocaleString()}</p>
                   </div>
                 </div>
                 
@@ -717,12 +749,19 @@ const Facturas = () => {
         factura={facturaSeleccionada}
       />
 
-      <EditarFacturaModal
-        isOpen={modalEditar}
-        onClose={() => setModalEditar(false)}
-        factura={facturaSeleccionada}
-        onSave={editarFactura}
-      />
+       <EditarFacturaModal
+         isOpen={modalEditar}
+         onClose={() => setModalEditar(false)}
+         factura={facturaSeleccionada}
+         onSave={editarFactura}
+       />
+
+       <RegistrarPagoModal
+         isOpen={modalRegistrarPago}
+         onClose={() => setModalRegistrarPago(false)}
+         facturaId={facturaSeleccionada?.id || ''}
+         onPagoRegistrado={onPagoRegistrado}
+       />
     </div>
   );
 };
