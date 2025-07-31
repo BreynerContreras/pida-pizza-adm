@@ -346,22 +346,6 @@ const FacturasPagadas = () => {
             </div>
           </Card>
           
-          <Card className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Monto Total Pagado</p>
-                <p className="text-xl font-bold text-green-600">
-                  B/. {facturasPagadas.reduce((total, factura) => {
-                    const monto = parseFloat(factura.monto.replace('B/. ', '').replace(',', ''));
-                    return total + monto;
-                  }, 0).toLocaleString()}
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                <DollarSign className="w-6 h-6 text-blue-600" />
-              </div>
-            </div>
-          </Card>
           
           <Card className="p-4">
             <div className="flex items-center justify-between">

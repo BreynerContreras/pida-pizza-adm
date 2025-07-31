@@ -209,7 +209,7 @@ const Proveedores = () => {
       {/* Encabezado */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Gestión de Proveedores</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Directorio</h1>
           <p className="text-gray-600">Administra la información de todos los proveedores</p>
         </div>
         <Button 
@@ -222,7 +222,7 @@ const Proveedores = () => {
       </div>
 
       {/* Estadísticas rápidas */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="p-4">
           <div className="flex items-center justify-between">
             <div>
@@ -263,19 +263,6 @@ const Proveedores = () => {
           </div>
         </Card>
         
-        <Card className="p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Volumen Total</p>
-              <p className="text-xl font-bold text-gray-900">
-                B/. {gerentesList.reduce((total, g) => total + parseFloat(g.montoTotal.replace('B/. ', '').replace(',', '')), 0).toLocaleString()}
-              </p>
-            </div>
-            <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-              <DollarSign className="w-6 h-6 text-purple-600" />
-            </div>
-          </div>
-        </Card>
       </div>
 
       {/* Búsqueda */}
@@ -332,15 +319,9 @@ const Proveedores = () => {
               </div>
 
               {/* Métricas */}
-              <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-100">
-                <div className="text-center">
-                  <p className="text-2xl font-bold text-blue-600">{gerente.facturas}</p>
-                  <p className="text-xs text-gray-600">Facturas</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-lg font-bold text-green-600">{gerente.montoTotal}</p>
-                  <p className="text-xs text-gray-600">Volumen Total</p>
-                </div>
+              <div className="text-center">
+                <p className="text-lg font-bold text-green-600">{gerente.montoTotal}</p>
+                <p className="text-xs text-gray-600">Volumen Total</p>
               </div>
 
               {/* Información adicional */}
