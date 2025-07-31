@@ -35,7 +35,7 @@ const Dashboard = () => {
       {/* Tarjeta de estadística principal */}
       <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-1 gap-6 max-w-md">
         <StatsCard
-          title="Total Facturas"
+          title="Total Facturas Mensual"
           value="1,284"
           change="+12.5%"
           changeType="positive"
