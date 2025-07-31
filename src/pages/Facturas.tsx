@@ -115,7 +115,7 @@ const getStatusColor = (estado: string) => {
   switch (estado) {
     case 'pendiente': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
     case 'aprobado': return 'bg-green-100 text-green-800 border-green-200';
-    case 'revision': return 'bg-blue-100 text-blue-800 border-blue-200';
+    
     case 'pagado': return 'bg-gray-100 text-gray-800 border-gray-200';
     case 'rechazado': return 'bg-red-100 text-red-800 border-red-200';
     default: return 'bg-gray-100 text-gray-800 border-gray-200';
@@ -467,7 +467,7 @@ const Facturas = () => {
             </div>
           )}
         </div>
-        {(user?.role === 'gerente_operativo' || user?.role === 'admin') && (
+        {user?.role === 'gerente_operativo' && (
           <Button 
             className="bg-blue-600 hover:bg-blue-700"
             onClick={() => setModalNuevaFactura(true)}
@@ -512,7 +512,6 @@ const Facturas = () => {
               <SelectContent>
                 <SelectItem value="todos">Todos los estados</SelectItem>
                 <SelectItem value="pendiente">Pendiente</SelectItem>
-                <SelectItem value="revision">En Revisión</SelectItem>
                 <SelectItem value="aprobado">Aprobado</SelectItem>
                 <SelectItem value="rechazado">Rechazado</SelectItem>
               </SelectContent>
@@ -563,13 +562,13 @@ const Facturas = () => {
           <Card className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">En Revisión</p>
+                <p className="text-sm text-gray-600">Aprobadas</p>
                 <p className="text-2xl font-bold text-blue-600">
-                  {facturasList.filter(f => f.estado === 'revision').length}
+                  {facturasList.filter(f => f.estado === 'aprobado').length}
                 </p>
               </div>
               <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                <Search className="w-6 h-6 text-blue-600" />
+                <CheckCircle className="w-6 h-6 text-blue-600" />
               </div>
             </div>
           </Card>
@@ -621,7 +620,6 @@ const Facturas = () => {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="pendiente">Pendiente</SelectItem>
-                          <SelectItem value="revision">En Revisión</SelectItem>
                           <SelectItem value="aprobado">Aprobado</SelectItem>
                           <SelectItem value="pagado">Pagado</SelectItem>
                           <SelectItem value="rechazado">Rechazado</SelectItem>

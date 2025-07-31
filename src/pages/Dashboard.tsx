@@ -66,11 +66,6 @@ const Dashboard = () => {
             </div>
             <Progress value={26} className="h-2" />
             
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">En Revisión</span>
-              <span className="font-semibold">45 (7%)</span>
-            </div>
-            <Progress value={7} className="h-2" />
           </CardContent>
         </Card>
 

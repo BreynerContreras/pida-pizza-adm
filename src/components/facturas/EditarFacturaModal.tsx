@@ -198,7 +198,6 @@ const EditarFacturaModal: React.FC<EditarFacturaModalProps> = ({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="pendiente">Pendiente</SelectItem>
-                <SelectItem value="revision">En Revisión</SelectItem>
                 <SelectItem value="aprobado">Aprobado</SelectItem>
                 <SelectItem value="pagado">Pagado</SelectItem>
                 <SelectItem value="rechazado">Rechazado</SelectItem>

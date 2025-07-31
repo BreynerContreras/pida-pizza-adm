@@ -71,7 +71,7 @@ export function AppSidebar() {
           icon: CheckCircle,
         },
         {
-          title: "Proveedores",
+          title: "Directorio",
           url: "/proveedores",
           icon: Building2,
         }
