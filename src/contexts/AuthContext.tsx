@@ -47,15 +47,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const savedUser = localStorage.getItem('currentUser');
     const savedUsers = localStorage.getItem('users');
     
-    // Initialize users in localStorage if they don't exist
-    if (!savedUsers) {
-      console.log('AuthProvider - initializing default users in localStorage');
-      localStorage.setItem('users', JSON.stringify(defaultUsers));
-    }
+    // Force reset users to ensure UUID compatibility
+    console.log('AuthProvider - forcing reset to UUID users');
+    localStorage.setItem('users', JSON.stringify(defaultUsers));
     
+    // Clear current user if it exists to force re-login with UUID
     if (savedUser) {
-      console.log('AuthProvider - restoring saved user');
-      setUser(JSON.parse(savedUser));
+      console.log('AuthProvider - clearing saved user to force re-login with UUID');
+      localStorage.removeItem('currentUser');
+      setUser(null);
     }
   }, []);
 
