@@ -41,6 +41,7 @@ import EditarFacturaModal from '../components/facturas/EditarFacturaModal';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const FacturasPagadas = () => {
   const { user } = useAuth();
@@ -55,33 +56,38 @@ const FacturasPagadas = () => {
   const [filtrosAvanzados, setFiltrosAvanzados] = useState({});
 
   useEffect(() => {
-    // Cargar facturas pagadas desde localStorage
-    const facturasPagadasGuardadas = localStorage.getItem('facturasPagadas');
-    if (facturasPagadasGuardadas) {
-      setFacturasPagadas(JSON.parse(facturasPagadasGuardadas));
-    }
+    cargarFacturasPagadas();
+  }, [user]);
 
-    // También cargar facturas con estado "pagado" desde la lista principal
-    const todasLasFacturas = localStorage.getItem('facturas');
-    if (todasLasFacturas) {
-      const facturas = JSON.parse(todasLasFacturas);
-      const facturasPagadasDeListaPrincipal = facturas.filter((f: any) => f.estado === 'pagado');
-      
-      // Combinar ambas listas evitando duplicados
-      const facturasPagadasCompletas = [...facturasPagadasDeListaPrincipal];
-      if (facturasPagadasGuardadas) {
-        const facturasPagadasExistentes = JSON.parse(facturasPagadasGuardadas);
-        facturasPagadasExistentes.forEach((factura: any) => {
-          if (!facturasPagadasCompletas.find(f => f.id === factura.id)) {
-            facturasPagadasCompletas.push(factura);
-          }
-        });
+  const cargarFacturasPagadas = async () => {
+    if (!user) return;
+    
+    try {
+      let query = supabase
+        .from('invoices')
+        .select('*')
+        .eq('estado', 'aprobado')
+        .order('created_at', { ascending: false });
+
+      // Si es gerente operativo, solo ver sus facturas
+      if (user.role === 'gerente_operativo') {
+        query = query.eq('created_by', user.id);
       }
-      
-      setFacturasPagadas(facturasPagadasCompletas);
-      localStorage.setItem('facturasPagadas', JSON.stringify(facturasPagadasCompletas));
+
+      const { data, error } = await query;
+
+      if (error) throw error;
+
+      setFacturasPagadas(data || []);
+    } catch (error) {
+      console.error('Error al cargar facturas pagadas:', error);
+      toast({
+        title: "Error",
+        description: "No se pudieron cargar las facturas pagadas.",
+        variant: "destructive"
+      });
     }
-  }, []);
+  };
 
   const editarFactura = (facturaEditada: any) => {
     const nuevasFacturasPagadas = facturasPagadas.map(factura => 
@@ -215,20 +221,15 @@ const FacturasPagadas = () => {
   };
 
   const facturasFiltradas = facturasPagadas.filter(factura => {
-    // Filtrar por usuario gerente operativo - solo ve sus facturas
-    if (user?.role === 'gerente_operativo' && factura.proveedor !== (user?.nombre || user?.username)) {
-      return false;
-    }
-
     const matchBusqueda = busqueda === "" || 
-      factura.id.toLowerCase().includes(busqueda.toLowerCase()) ||
-      factura.proveedor.toLowerCase().includes(busqueda.toLowerCase()) ||
-      factura.rif.toLowerCase().includes(busqueda.toLowerCase());
+      factura.numero_factura?.toLowerCase().includes(busqueda.toLowerCase()) ||
+      factura.proveedor?.toLowerCase().includes(busqueda.toLowerCase()) ||
+      factura.rif?.toLowerCase().includes(busqueda.toLowerCase());
     
     // Filtro por mes
     let matchMes = true;
     if (mesSeleccionado !== "todos") {
-      const fechaFactura = new Date(factura.fecha.split('/').reverse().join('-'));
+      const fechaFactura = new Date(factura.fecha);
       const mesFactura = fechaFactura.getMonth();
       matchMes = mesFactura === parseInt(mesSeleccionado);
     }
@@ -237,14 +238,14 @@ const FacturasPagadas = () => {
     let matchFiltrosAvanzados = true;
     if (Object.keys(filtrosAvanzados).length > 0) {
       const filtros = filtrosAvanzados as any;
-      if (filtros.nombreProveedor && !factura.proveedor.toLowerCase().includes(filtros.nombreProveedor.toLowerCase())) {
+      if (filtros.nombreProveedor && !factura.proveedor?.toLowerCase().includes(filtros.nombreProveedor.toLowerCase())) {
         matchFiltrosAvanzados = false;
       }
-      if (filtros.numeroFactura && !factura.id.toLowerCase().includes(filtros.numeroFactura.toLowerCase())) {
+      if (filtros.numeroFactura && !factura.numero_factura?.toLowerCase().includes(filtros.numeroFactura.toLowerCase())) {
         matchFiltrosAvanzados = false;
       }
       if (filtros.fechaDesde || filtros.fechaHasta) {
-        const fechaFactura = new Date(factura.fecha.split('/').reverse().join('-'));
+        const fechaFactura = new Date(factura.fecha);
         if (filtros.fechaDesde && fechaFactura < new Date(filtros.fechaDesde)) {
           matchFiltrosAvanzados = false;
         }
@@ -353,7 +354,7 @@ const FacturasPagadas = () => {
                 <p className="text-sm text-gray-600">Este Mes</p>
                 <p className="text-2xl font-bold text-blue-600">
                   {facturasPagadas.filter(f => {
-                    const fechaFactura = new Date(f.fecha.split('/').reverse().join('-'));
+                    const fechaFactura = new Date(f.fecha);
                     const mesActual = new Date().getMonth();
                     return fechaFactura.getMonth() === mesActual;
                   }).length}
@@ -371,7 +372,7 @@ const FacturasPagadas = () => {
                 <p className="text-sm text-gray-600">Mes Pasado</p>
                 <p className="text-2xl font-bold text-orange-600">
                   {facturasPagadas.filter(f => {
-                    const fechaFactura = new Date(f.fecha.split('/').reverse().join('-'));
+                    const fechaFactura = new Date(f.fecha);
                     const mesAnterior = new Date().getMonth() - 1;
                     const añoActual = new Date().getFullYear();
                     const añoFactura = fechaFactura.getFullYear();
@@ -407,7 +408,7 @@ const FacturasPagadas = () => {
               <div key={factura.id} className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow bg-green-50">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-4">
-                    <h3 className="text-lg font-semibold text-gray-900">{factura.id}</h3>
+                    <h3 className="text-lg font-semibold text-gray-900">{factura.numero_factura}</h3>
                     <Badge className="bg-green-100 text-green-800 border-green-200" variant="outline">
                       <CheckCircle2 className="w-3 h-3 mr-1" />
                       Pagado
@@ -476,8 +477,8 @@ const FacturasPagadas = () => {
                       <Calendar className="w-4 h-4 text-gray-400" />
                       <span className="text-sm font-medium text-gray-600">Fechas</span>
                     </div>
-                    <p className="text-sm text-gray-900">Emisión: {factura.fecha}</p>
-                    <p className="text-sm text-gray-900">Vencimiento: {factura.vencimiento}</p>
+                    <p className="text-sm text-gray-900">Emisión: {new Date(factura.fecha).toLocaleDateString('es-ES')}</p>
+                    <p className="text-sm text-gray-900">Límite de pago: {new Date(factura.limite_pago).toLocaleDateString('es-ES')}</p>
                   </div>
                   
                   <div>
@@ -485,7 +486,7 @@ const FacturasPagadas = () => {
                       <DollarSign className="w-4 h-4 text-gray-400" />
                       <span className="text-sm font-medium text-gray-600">Monto</span>
                     </div>
-                    <p className="text-2xl font-bold text-green-700">{factura.monto}</p>
+                    <p className="text-2xl font-bold text-green-700">B/. {factura.monto?.toLocaleString()}</p>
                   </div>
                 </div>
                 

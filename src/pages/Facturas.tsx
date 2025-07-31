@@ -182,28 +182,39 @@ const Facturas = () => {
     localStorage.setItem('facturas', JSON.stringify(nuevasFacturas));
   };
 
-  const cambiarEstadoFactura = (facturaId: string, nuevoEstado: string) => {
-    const nuevasFacturas = facturasList.map(factura => {
-      if (factura.id === facturaId) {
-        return { ...factura, estado: nuevoEstado };
-      }
-      return factura;
-    });
-    
-    guardarFacturas(nuevasFacturas);
-    
-    // Si el estado cambia a "pagado", guardar también en facturas pagadas
-    if (nuevoEstado === 'pagado') {
-      const facturasPagadas = JSON.parse(localStorage.getItem('facturasPagadas') || '[]');
-      const facturaPagada = nuevasFacturas.find(f => f.id === facturaId);
-      if (facturaPagada) {
-        facturasPagadas.push(facturaPagada);
-        localStorage.setItem('facturasPagadas', JSON.stringify(facturasPagadas));
-      }
+  const cambiarEstadoFactura = async (facturaId: string, nuevoEstado: string) => {
+    try {
+      // Actualizar en la base de datos
+      const { error } = await supabase
+        .from('invoices')
+        .update({ estado: nuevoEstado })
+        .eq('id', facturaId);
+
+      if (error) throw error;
+
+      // Actualizar estado local
+      const nuevasFacturas = facturasList.map(factura => {
+        if (factura.id === facturaId) {
+          return { ...factura, estado: nuevoEstado };
+        }
+        return factura;
+      });
       
+      setFacturasList(nuevasFacturas);
+      
+      // Si el estado cambia a "aprobado", mover a facturas pagadas
+      if (nuevoEstado === 'aprobado') {
+        toast({
+          title: "Factura aprobada",
+          description: "La factura ha sido aprobada y está disponible en la sección de Facturas Pagadas.",
+        });
+      }
+    } catch (error) {
+      console.error('Error al cambiar estado de factura:', error);
       toast({
-        title: "Factura marcada como pagada",
-        description: "La factura ha sido movida a la sección de Facturas Pagadas.",
+        title: "Error",
+        description: "No se pudo cambiar el estado de la factura.",
+        variant: "destructive"
       });
     }
   };
@@ -608,8 +619,6 @@ const Facturas = () => {
                         <SelectContent>
                           <SelectItem value="pendiente">Pendiente</SelectItem>
                           <SelectItem value="aprobado">Aprobado</SelectItem>
-                          <SelectItem value="pagado">Pagado</SelectItem>
-                          <SelectItem value="rechazado">Rechazado</SelectItem>
                         </SelectContent>
                       </Select>
                     )}
