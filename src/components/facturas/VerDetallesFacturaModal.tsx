@@ -25,6 +25,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 interface FacturaDetalle {
   id: string;
+  numero_factura: string;
   proveedor: string;
   rif: string;
   monto: string;
@@ -158,7 +159,7 @@ const VerDetallesFacturaModal: React.FC<VerDetallesFacturaModalProps> = ({
           {/* Encabezado con ID y Estado */}
           <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
             <div>
-              <h3 className="text-lg font-semibold">{factura.id}</h3>
+              <h3 className="text-lg font-semibold">{factura.numero_factura}</h3>
               <p className="text-sm text-gray-600">Número de Factura</p>
             </div>
             <Badge className={getStatusColor(factura.estado)} variant="outline">
