@@ -11,10 +11,19 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { useNavigate } from 'react-router-dom';
 import { useNotifications } from '../hooks/useNotifications';
+import { useInvoiceStats } from '../hooks/useInvoiceStats';
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const { facturas_vencen_hoy, facturas_por_vencer } = useNotifications();
+  const { 
+    totalMontoMensual, 
+    montoAprobadas, 
+    montoPendientes, 
+    porcentajeAprobadas, 
+    porcentajePendientes,
+    loading 
+  } = useInvoiceStats();
 
   const navegarAFacturasVencenHoy = () => {
     navigate('/facturas?filtro=vencen_hoy');
@@ -36,7 +45,7 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-1 gap-6 max-w-md">
         <StatsCard
           title="Total Facturas Mensual"
-          value="1,284"
+          value={loading ? "Cargando..." : `Bs. ${totalMontoMensual.toLocaleString('es-VE', { minimumFractionDigits: 2 })}`}
           change="+12.5%"
           changeType="positive"
           icon={FileText}
@@ -56,15 +65,19 @@ const Dashboard = () => {
           <CardContent className="space-y-4">
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-600">Aprobadas</span>
-              <span className="font-semibold">456 (67%)</span>
+              <span className="font-semibold">
+                {loading ? "Cargando..." : `Bs. ${montoAprobadas.toLocaleString('es-VE', { minimumFractionDigits: 2 })} (${porcentajeAprobadas}%)`}
+              </span>
             </div>
-            <Progress value={67} className="h-2" />
+            <Progress value={porcentajeAprobadas} className="h-2" />
             
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-600">Pendientes</span>
-              <span className="font-semibold">178 (26%)</span>
+              <span className="font-semibold">
+                {loading ? "Cargando..." : `Bs. ${montoPendientes.toLocaleString('es-VE', { minimumFractionDigits: 2 })} (${porcentajePendientes}%)`}
+              </span>
             </div>
-            <Progress value={26} className="h-2" />
+            <Progress value={porcentajePendientes} className="h-2" />
             
           </CardContent>
         </Card>
