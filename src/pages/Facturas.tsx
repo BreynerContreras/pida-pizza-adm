@@ -559,19 +559,6 @@ const Facturas = () => {
             </div>
           </Card>
           
-          <Card className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Aprobadas</p>
-                <p className="text-2xl font-bold text-blue-600">
-                  {facturasList.filter(f => f.estado === 'aprobado').length}
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                <CheckCircle className="w-6 h-6 text-blue-600" />
-              </div>
-            </div>
-          </Card>
           
           <Card className="p-4">
             <div className="flex items-center justify-between">
