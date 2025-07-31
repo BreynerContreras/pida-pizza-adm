@@ -364,6 +364,30 @@ const FacturasPagadas = () => {
               </div>
             </div>
           </Card>
+
+          <Card className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Mes Pasado</p>
+                <p className="text-2xl font-bold text-orange-600">
+                  {facturasPagadas.filter(f => {
+                    const fechaFactura = new Date(f.fecha.split('/').reverse().join('-'));
+                    const mesAnterior = new Date().getMonth() - 1;
+                    const añoActual = new Date().getFullYear();
+                    const añoFactura = fechaFactura.getFullYear();
+                    
+                    if (mesAnterior === -1) {
+                      return fechaFactura.getMonth() === 11 && añoFactura === añoActual - 1;
+                    }
+                    return fechaFactura.getMonth() === mesAnterior && añoFactura === añoActual;
+                  }).length}
+                </p>
+              </div>
+              <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                <Calendar className="w-6 h-6 text-orange-600" />
+              </div>
+            </div>
+          </Card>
         </div>
       )}
 
