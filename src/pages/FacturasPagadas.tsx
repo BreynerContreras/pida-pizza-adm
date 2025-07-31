@@ -305,13 +305,7 @@ const FacturasPagadas = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Este Mes</p>
-                <p className="text-2xl font-bold text-blue-600">
-                  {facturasPagadas.filter(f => {
-                const fechaFactura = new Date(f.fecha.split('/').reverse().join('-'));
-                const mesActual = new Date().getMonth();
-                return fechaFactura.getMonth() === mesActual;
-              }).length}
-                </p>
+                
               </div>
               <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
                 <Calendar className="w-6 h-6 text-purple-600" />
