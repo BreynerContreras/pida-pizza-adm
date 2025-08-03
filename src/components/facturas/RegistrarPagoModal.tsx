@@ -31,19 +31,25 @@ const RegistrarPagoModal: React.FC<RegistrarPagoModalProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     fechaPago: '',
-    montoPagado: '',
+    montoEnDolares: '',
+    tasaBcv: '',
     descripcionPago: '',
     comprobante: null as File | null
   });
+
+  // Calcular monto en bs automáticamente
+  const montoEnBs = formData.montoEnDolares && formData.tasaBcv 
+    ? (parseFloat(formData.montoEnDolares) * parseFloat(formData.tasaBcv)).toFixed(2)
+    : '0.00';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Validaciones
-    if (!formData.fechaPago || !formData.montoPagado || !formData.comprobante) {
+    if (!formData.fechaPago || !formData.montoEnDolares || !formData.tasaBcv || !formData.comprobante) {
       toast({
         title: "Error de validación",
-        description: "Día de pago, monto pagado y foto del comprobante son obligatorios.",
+        description: "Día de pago, monto en $, tasa del BCV y foto del comprobante son obligatorios.",
         variant: "destructive"
       });
       return;
@@ -76,7 +82,7 @@ const RegistrarPagoModal: React.FC<RegistrarPagoModalProps> = ({
         .insert({
           invoice_id: facturaId,
           fecha_pago: formData.fechaPago,
-          monto_pagado: parseFloat(formData.montoPagado),
+          monto_pagado: parseFloat(montoEnBs),
           descripcion_pago: formData.descripcionPago || null,
           comprobante_url: comprobanteUrl,
           created_by: user?.id
@@ -92,7 +98,8 @@ const RegistrarPagoModal: React.FC<RegistrarPagoModalProps> = ({
       // Limpiar formulario
       setFormData({
         fechaPago: '',
-        montoPagado: '',
+        montoEnDolares: '',
+        tasaBcv: '',
         descripcionPago: '',
         comprobante: null
       });
@@ -139,14 +146,40 @@ const RegistrarPagoModal: React.FC<RegistrarPagoModalProps> = ({
               />
             </div>
             <div>
-              <Label htmlFor="montoPagado">Monto pagado *</Label>
+              <Label htmlFor="tasaBcv">Tasa del BCV *</Label>
               <Input
-                id="montoPagado"
+                id="tasaBcv"
                 type="number"
                 step="0.01"
-                value={formData.montoPagado}
-                onChange={(e) => setFormData({...formData, montoPagado: e.target.value})}
+                value={formData.tasaBcv}
+                onChange={(e) => setFormData({...formData, tasaBcv: e.target.value})}
+                placeholder="Ej: 36.50"
                 required
+              />
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="montoEnDolares">Monto en $ *</Label>
+              <Input
+                id="montoEnDolares"
+                type="number"
+                step="0.01"
+                value={formData.montoEnDolares}
+                onChange={(e) => setFormData({...formData, montoEnDolares: e.target.value})}
+                placeholder="Ej: 100.00"
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="montoEnBs">Monto a pagar expresado en Bs.</Label>
+              <Input
+                id="montoEnBs"
+                type="text"
+                value={`${montoEnBs} Bs.`}
+                readOnly
+                className="bg-muted"
               />
             </div>
           </div>
