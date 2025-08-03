@@ -27,15 +27,18 @@ interface FacturaDetalle {
   id: string;
   numero_factura: string;
   proveedor: string;
-  rif: string;
+  rif?: string;
   monto: string;
   fecha: string;
-  vencimiento: string;
+  limite_pago: string;
   estado: string;
-  categoria: string;
+  categoria?: string;
   descripcion: string;
+  nombre_empresa: string;
   created_by?: string;
   imagen_url?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 interface CreadorInfo {
@@ -167,20 +170,24 @@ const VerDetallesFacturaModal: React.FC<VerDetallesFacturaModalProps> = ({
             </Badge>
           </div>
 
-          {/* Información del Gerente Operativo */}
+          {/* Información del Proveedor */}
           <div className="border border-gray-200 rounded-lg p-4">
             <div className="flex items-center gap-2 mb-3">
               <Building2 className="w-5 h-5 text-blue-600" />
-              <h4 className="font-semibold text-gray-900">Gerente Operativo</h4>
+              <h4 className="font-semibold text-gray-900">Información del Proveedor</h4>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <div>
-                <p className="text-sm font-medium text-gray-600">Nombre</p>
+                <p className="text-sm font-medium text-gray-600">Proveedor</p>
                 <p className="text-gray-900">{factura.proveedor}</p>
               </div>
               <div>
+                <p className="text-sm font-medium text-gray-600">Empresa</p>
+                <p className="text-gray-900">{factura.nombre_empresa}</p>
+              </div>
+              <div>
                 <p className="text-sm font-medium text-gray-600">RIF</p>
-                <p className="text-gray-900">{factura.rif}</p>
+                <p className="text-gray-900">{factura.rif || 'No especificado'}</p>
               </div>
             </div>
           </div>
@@ -194,13 +201,15 @@ const VerDetallesFacturaModal: React.FC<VerDetallesFacturaModalProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>
                 <p className="text-sm font-medium text-gray-600">Monto Total</p>
-                <p className="text-2xl font-bold text-green-700">{factura.monto}</p>
+                <p className="text-2xl font-bold text-green-700">
+                  {typeof factura.monto === 'string' ? factura.monto : `B/. ${Number(factura.monto).toLocaleString()}`}
+                </p>
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-600">Categoría</p>
                 <div className="flex items-center gap-2">
                   <Tag className="w-4 h-4 text-gray-500" />
-                  <p className="text-gray-900">{factura.categoria}</p>
+                  <p className="text-gray-900">{factura.categoria || 'No especificada'}</p>
                 </div>
               </div>
             </div>
@@ -212,14 +221,26 @@ const VerDetallesFacturaModal: React.FC<VerDetallesFacturaModalProps> = ({
               <Calendar className="w-5 h-5 text-purple-600" />
               <h4 className="font-semibold text-gray-900">Fechas Importantes</h4>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
               <div>
                 <p className="text-sm font-medium text-gray-600">Fecha de Emisión</p>
-                <p className="text-gray-900">{factura.fecha}</p>
+                <p className="text-gray-900">{new Date(factura.fecha).toLocaleDateString('es-ES')}</p>
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-600">Fecha de Vencimiento</p>
-                <p className="text-gray-900">{factura.vencimiento}</p>
+                <p className="text-sm font-medium text-gray-600">Límite de Pago</p>
+                <p className="text-gray-900">{new Date(factura.limite_pago).toLocaleDateString('es-ES')}</p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-600">Fecha de Creación</p>
+                <p className="text-gray-900">
+                  {factura.created_at ? new Date(factura.created_at).toLocaleDateString('es-ES') : 'No disponible'}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-600">Última Actualización</p>
+                <p className="text-gray-900">
+                  {factura.updated_at ? new Date(factura.updated_at).toLocaleDateString('es-ES') : 'No disponible'}
+                </p>
               </div>
             </div>
           </div>
