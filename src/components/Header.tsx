@@ -4,15 +4,17 @@ import { Search, Menu, LogOut } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useAuth } from '../contexts/AuthContext';
+import { useSidebar } from "@/components/ui/sidebar";
 
 export const Header = () => {
   const { user, logout } = useAuth();
+  const { toggleSidebar } = useSidebar();
 
   return (
     <header className="bg-white border-b border-gray-200 px-6 py-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="sm" className="text-gray-600 hover:text-gray-900">
+          <Button variant="ghost" size="sm" onClick={toggleSidebar} className="text-gray-600 hover:text-gray-900">
             <Menu className="w-5 h-5" />
           </Button>
           <div className="relative">

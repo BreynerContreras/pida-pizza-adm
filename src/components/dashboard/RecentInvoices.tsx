@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Eye, MoreHorizontal } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 
 interface Invoice {
   id: string;
@@ -29,6 +30,7 @@ const getStatusColor = (estado: string) => {
 export const RecentInvoices = () => {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchInvoices = async () => {
@@ -63,11 +65,19 @@ export const RecentInvoices = () => {
     return `Bs. ${amount.toLocaleString('es-VE', { minimumFractionDigits: 2 })}`;
   };
 
+  const handleVerTodasFacturas = () => {
+    navigate('/facturas');
+  };
+
+  const handleVerDetalles = (facturaId: string) => {
+    navigate(`/facturas?ver=${facturaId}`);
+  };
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Facturas Recientes</CardTitle>
-        <Button variant="outline" size="sm">Ver todas</Button>
+        <Button variant="outline" size="sm" onClick={handleVerTodasFacturas}>Ver todas</Button>
       </CardHeader>
       <CardContent>
         {loading ? (
@@ -92,10 +102,10 @@ export const RecentInvoices = () => {
                 <div className="text-right">
                   <p className="text-lg font-bold text-gray-900 mb-2">{formatAmount(factura.monto)}</p>
                   <div className="flex gap-2">
-                    <Button variant="ghost" size="sm">
+                    <Button variant="ghost" size="sm" onClick={() => handleVerDetalles(factura.id)}>
                       <Eye className="w-4 h-4" />
                     </Button>
-                    <Button variant="ghost" size="sm">
+                    <Button variant="ghost" size="sm" onClick={() => navigate('/facturas')}>
                       <MoreHorizontal className="w-4 h-4" />
                     </Button>
                   </div>

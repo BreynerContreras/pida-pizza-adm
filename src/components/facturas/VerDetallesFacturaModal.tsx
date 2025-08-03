@@ -5,6 +5,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { 
@@ -156,6 +157,9 @@ const VerDetallesFacturaModal: React.FC<VerDetallesFacturaModalProps> = ({
             <FileText className="w-5 h-5" />
             Detalles de Factura
           </DialogTitle>
+          <DialogDescription>
+            Información completa de la factura seleccionada
+          </DialogDescription>
         </DialogHeader>
         
         <div className="space-y-6">
