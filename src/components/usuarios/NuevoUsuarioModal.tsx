@@ -37,6 +37,7 @@ const NuevoUsuarioModal: React.FC<NuevoUsuarioModalProps> = ({
   const [formData, setFormData] = useState({
     username: '',
     password: '',
+    confirmPassword: '',
     nombre: '',
     telefono: '',
     email: '',
@@ -59,6 +60,24 @@ const NuevoUsuarioModal: React.FC<NuevoUsuarioModalProps> = ({
       return;
     }
 
+    if (formData.password !== formData.confirmPassword) {
+      toast({
+        title: "Error de validación",
+        description: "Las contraseñas no coinciden.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (formData.password.length < 6 || formData.password.length > 12) {
+      toast({
+        title: "Error de validación",
+        description: "La contraseña debe tener entre 6 y 12 caracteres.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     const nuevoUsuario: Omit<User, 'id' | 'lastAccess'> = {
       username: formData.username,
       password: formData.password,
@@ -67,12 +86,7 @@ const NuevoUsuarioModal: React.FC<NuevoUsuarioModalProps> = ({
       telefono: formData.telefono,
       email: formData.email,
       direccion: formData.direccion,
-      rif: formData.rif,
-      ...(role === 'gerente_operativo' && {
-        nombreEmpresa: formData.nombreEmpresa,
-        contacto: formData.contacto,
-        categoria: formData.categoria
-      })
+      rif: formData.rif
     };
 
     onSave(nuevoUsuario);
@@ -80,6 +94,7 @@ const NuevoUsuarioModal: React.FC<NuevoUsuarioModalProps> = ({
     setFormData({
       username: '',
       password: '',
+      confirmPassword: '',
       nombre: '',
       telefono: '',
       email: '',
@@ -138,18 +153,33 @@ const NuevoUsuarioModal: React.FC<NuevoUsuarioModalProps> = ({
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 required
               />
+              <p className="text-sm text-muted-foreground mt-1">
+                La contraseña debe tener entre 6 y 12 caracteres
+              </p>
             </div>
             
             <div>
-              <Label htmlFor="nombre">
-                {role === 'gerente_operativo' ? 'Nombre Completo *' : 'Nombre Completo *'}
-              </Label>
+              <Label htmlFor="confirmPassword">Verificar Contraseña *</Label>
+              <Input
+                id="confirmPassword"
+                type="password"
+                value={formData.confirmPassword}
+                onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                required
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="nombre">Nombre Completo *</Label>
               <Input
                 id="nombre"
                 value={formData.nombre}
                 onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
                 required
               />
+              <p className="text-sm text-muted-foreground mt-1">
+                Ejemplo: breyner rafael contreras aguilar
+              </p>
             </div>
             
             <div>
@@ -159,6 +189,9 @@ const NuevoUsuarioModal: React.FC<NuevoUsuarioModalProps> = ({
                 value={formData.telefono}
                 onChange={(e) => setFormData({ ...formData, telefono: e.target.value })}
               />
+              <p className="text-sm text-muted-foreground mt-1">
+                Ejemplo: 0414-3878315
+              </p>
             </div>
             
             <div>
@@ -169,75 +202,21 @@ const NuevoUsuarioModal: React.FC<NuevoUsuarioModalProps> = ({
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               />
+              <p className="text-sm text-muted-foreground mt-1">
+                Ejemplo: breynercontreras@gmail.com
+              </p>
             </div>
 
-            {role === 'gerente_operativo' && (
-              <>
-                <div>
-                  <Label htmlFor="nombreEmpresa">Nombre de la Empresa</Label>
-                  <Input
-                    id="nombreEmpresa"
-                    value={formData.nombreEmpresa}
-                    onChange={(e) => setFormData({ ...formData, nombreEmpresa: e.target.value })}
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="contacto">Persona de Contacto</Label>
-                  <Input
-                    id="contacto"
-                    value={formData.contacto}
-                    onChange={(e) => setFormData({ ...formData, contacto: e.target.value })}
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="categoria">Categoría</Label>
-                  <Select value={formData.categoria} onValueChange={(value) => setFormData({ ...formData, categoria: value })}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Seleccionar categoría" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categorias.map((cat) => (
-                        <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div>
-                  <Label htmlFor="rif">RIF de la Empresa</Label>
-                  <Input
-                    id="rif"
-                    value={formData.rif}
-                    onChange={(e) => setFormData({ ...formData, rif: e.target.value })}
-                  />
-                </div>
-              </>
-            )}
             
-            {role !== 'gerente_operativo' && (
-              <div>
-                <Label htmlFor="direccion">Dirección</Label>
-                <Input
-                  id="direccion"
-                  value={formData.direccion}
-                  onChange={(e) => setFormData({ ...formData, direccion: e.target.value })}
-                />
-              </div>
-            )}
-          </div>
-          
-          {role === 'gerente_operativo' && (
             <div>
-              <Label htmlFor="direccion">Dirección de la Empresa</Label>
+              <Label htmlFor="direccion">Dirección</Label>
               <Input
                 id="direccion"
                 value={formData.direccion}
                 onChange={(e) => setFormData({ ...formData, direccion: e.target.value })}
               />
             </div>
-          )}
+          </div>
         </form>
 
         <DialogFooter>
