@@ -488,7 +488,7 @@ const Facturas = () => {
               <SelectContent>
                 <SelectItem value="todos">Todos los estados</SelectItem>
                 <SelectItem value="pendiente">Pendiente</SelectItem>
-                <SelectItem value="aprobado">Aprobado</SelectItem>
+                <SelectItem value="aprobado">Pagado</SelectItem>
               </SelectContent>
             </Select>
             
@@ -537,7 +537,7 @@ const Facturas = () => {
           <Card className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Aprobadas</p>
+                <p className="text-sm text-gray-600">Pagadas</p>
                 <p className="text-2xl font-bold text-green-600">
                   {facturasList.filter(f => f.estado === 'aprobado').length}
                 </p>
@@ -575,7 +575,7 @@ const Facturas = () => {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="pendiente">Pendiente</SelectItem>
-                          <SelectItem value="aprobado">Aprobado</SelectItem>
+                          <SelectItem value="aprobado">Pagado</SelectItem>
                         </SelectContent>
                       </Select>}
                   </div>
