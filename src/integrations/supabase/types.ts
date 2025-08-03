@@ -165,7 +165,39 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      authenticate_user: {
+        Args: { input_username: string; input_password: string }
+        Returns: {
+          id: string
+          user_id: string
+          username: string
+          role: string
+          nombre: string
+          telefono: string
+          email: string
+          direccion: string
+          rif: string
+          nombre_empresa: string
+          contacto: string
+          categoria: string
+        }[]
+      }
+      create_user_profile: {
+        Args: {
+          input_username: string
+          input_password: string
+          input_role: string
+          input_nombre?: string
+          input_telefono?: string
+          input_email?: string
+          input_direccion?: string
+          input_rif?: string
+          input_nombre_empresa?: string
+          input_contacto?: string
+          input_categoria?: string
+        }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never
