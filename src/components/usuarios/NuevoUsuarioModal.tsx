@@ -158,7 +158,7 @@ const NuevoUsuarioModal: React.FC<NuevoUsuarioModalProps> = ({
               </p>
             </div>
             
-            <div>
+            <div className="md:col-span-2">
               <Label htmlFor="confirmPassword">Verificar Contraseña *</Label>
               <Input
                 id="confirmPassword"
