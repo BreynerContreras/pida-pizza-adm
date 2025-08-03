@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { User } from '../../types/auth';
+import { supabase } from "@/integrations/supabase/client";
 
 interface NuevoUsuarioModalProps {
   isOpen: boolean;
@@ -48,7 +49,7 @@ const NuevoUsuarioModal: React.FC<NuevoUsuarioModalProps> = ({
     categoria: ''
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!formData.username || !formData.password || !formData.nombre) {
@@ -78,18 +79,53 @@ const NuevoUsuarioModal: React.FC<NuevoUsuarioModalProps> = ({
       return;
     }
 
-    const nuevoUsuario: Omit<User, 'id' | 'lastAccess'> = {
-      username: formData.username,
-      password: formData.password,
-      role: role,
-      nombre: formData.nombre,
-      telefono: formData.telefono,
-      email: formData.email,
-      direccion: formData.direccion,
-      rif: formData.rif
-    };
+    try {
+      const { data, error } = await supabase.rpc('create_user_profile', {
+        input_username: formData.username,
+        input_password: formData.password,
+        input_role: role,
+        input_nombre: formData.nombre,
+        input_telefono: formData.telefono,
+        input_email: formData.email,
+        input_direccion: formData.direccion,
+        input_rif: formData.rif,
+        input_nombre_empresa: formData.nombreEmpresa,
+        input_contacto: formData.contacto,
+        input_categoria: formData.categoria
+      });
 
-    onSave(nuevoUsuario);
+      if (error) {
+        toast({
+          title: "Error",
+          description: "Error al crear el usuario: " + error.message,
+          variant: "destructive"
+        });
+        return;
+      }
+
+      toast({
+        title: "Usuario creado",
+        description: `${getRoleTitle()} creado exitosamente.`,
+      });
+
+      onSave({
+        username: formData.username,
+        password: formData.password,
+        role: role,
+        nombre: formData.nombre,
+        telefono: formData.telefono,
+        email: formData.email,
+        direccion: formData.direccion,
+        rif: formData.rif
+      });
+    
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Error inesperado al crear el usuario.",
+        variant: "destructive"
+      });
+    }
     
     setFormData({
       username: '',

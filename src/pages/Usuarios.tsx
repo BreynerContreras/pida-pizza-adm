@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { User as UserType } from '../types/auth';
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import SeleccionarRolModal from '../components/usuarios/SeleccionarRolModal';
 import NuevoUsuarioModal from '../components/usuarios/NuevoUsuarioModal';
 import VerDetallesUsuarioModal from '../components/usuarios/VerDetallesUsuarioModal';
@@ -45,11 +46,52 @@ const Usuarios = () => {
   const [selectedUser, setSelectedUser] = useState<UserType | null>(null);
 
   useEffect(() => {
-    const savedUsers = localStorage.getItem('users');
-    if (savedUsers) {
-      setUsers(JSON.parse(savedUsers));
-    }
+    fetchUsers();
   }, []);
+
+  const fetchUsers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching users:', error);
+        toast({
+          title: "Error",
+          description: "No se pudieron cargar los usuarios.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const mappedUsers: UserType[] = data.map(profile => ({
+        id: profile.user_id,
+        username: profile.username,
+        password: '', // No mostramos contraseñas
+        role: profile.role as 'contadora' | 'gerente_operativo' | 'admin',
+        nombre: profile.nombre,
+        telefono: profile.telefono,
+        email: profile.email,
+        direccion: profile.direccion,
+        rif: profile.rif,
+        nombreEmpresa: profile.nombre_empresa,
+        contacto: profile.contacto,
+        categoria: profile.categoria,
+        lastAccess: profile.updated_at
+      }));
+
+      setUsers(mappedUsers);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      toast({
+        title: "Error",
+        description: "Error inesperado al cargar los usuarios.",
+        variant: "destructive"
+      });
+    }
+  };
 
   const handleRoleSelected = (role: 'contadora' | 'gerente_operativo' | 'admin') => {
     setSelectedRole(role);
@@ -57,40 +99,85 @@ const Usuarios = () => {
     setIsNewUserModalOpen(true);
   };
 
-  const handleSaveUser = (userData: Omit<UserType, 'id' | 'lastAccess'>) => {
-    const newUser: UserType = {
-      ...userData,
-      id: Date.now().toString(),
-      lastAccess: new Date().toISOString()
-    };
-
-    const updatedUsers = [...users, newUser];
-    setUsers(updatedUsers);
-    localStorage.setItem('users', JSON.stringify(updatedUsers));
+  const handleSaveUser = async (userData: Omit<UserType, 'id' | 'lastAccess'>) => {
+    // El usuario ya se creó en la base de datos desde el modal
+    // Solo necesitamos refrescar la lista
+    await fetchUsers();
     
     toast({
       title: "Usuario creado",
-      description: `El ${getRoleTitle(newUser.role)} ha sido creado exitosamente.`,
+      description: `El ${getRoleTitle(userData.role)} ha sido creado exitosamente.`,
     });
   };
 
-  const handleEditUser = (editedUser: UserType) => {
-    const updatedUsers = users.map(user => 
-      user.id === editedUser.id ? editedUser : user
-    );
-    setUsers(updatedUsers);
-    localStorage.setItem('users', JSON.stringify(updatedUsers));
+  const handleEditUser = async (editedUser: UserType) => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          username: editedUser.username,
+          nombre: editedUser.nombre,
+          telefono: editedUser.telefono,
+          email: editedUser.email,
+          direccion: editedUser.direccion,
+          rif: editedUser.rif,
+          nombre_empresa: editedUser.nombreEmpresa,
+          contacto: editedUser.contacto,
+          categoria: editedUser.categoria
+        })
+        .eq('user_id', editedUser.id);
+
+      if (error) {
+        toast({
+          title: "Error",
+          description: "No se pudo actualizar el usuario.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      await fetchUsers();
+      toast({
+        title: "Usuario actualizado",
+        description: "El usuario ha sido actualizado exitosamente.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Error inesperado al actualizar el usuario.",
+        variant: "destructive"
+      });
+    }
   };
 
-  const deleteUser = (userId: string) => {
-    const updatedUsers = users.filter(user => user.id !== userId);
-    setUsers(updatedUsers);
-    localStorage.setItem('users', JSON.stringify(updatedUsers));
-    
-    toast({
-      title: "Usuario eliminado",
-      description: "El usuario ha sido eliminado exitosamente.",
-    });
+  const deleteUser = async (userId: string) => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('user_id', userId);
+
+      if (error) {
+        toast({
+          title: "Error",
+          description: "No se pudo eliminar el usuario.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      await fetchUsers();
+      toast({
+        title: "Usuario eliminado",
+        description: "El usuario ha sido eliminado exitosamente.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Error inesperado al eliminar el usuario.",
+        variant: "destructive"
+      });
+    }
   };
 
   const openDetailsModal = (user: UserType) => {

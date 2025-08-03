@@ -1,86 +1,59 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, AuthContextType } from '../types/auth';
+import { supabase } from "@/integrations/supabase/client";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
 
-  // Usuarios por defecto del sistema con UUIDs válidos
-  const defaultUsers: User[] = [
-    {
-      id: '550e8400-e29b-41d4-a716-446655440000',
-      username: 'admin',
-      password: 'admin',
-      role: 'admin',
-      nombre: 'Administrador Principal',
-      email: 'admin@pidapizza.com',
-      telefono: '+507 6000-0000'
-    },
-    {
-      id: '550e8400-e29b-41d4-a716-446655440001',
-      username: 'contadora',
-      password: '12345678',
-      role: 'contadora',
-      nombre: 'María González',
-      email: 'contadora@pidapizza.com',
-      telefono: '+507 6000-0001'
-    },
-    {
-      id: '550e8400-e29b-41d4-a716-446655440002',
-      username: 'GerenteOperativo',
-      password: 'gerente123',
-      role: 'gerente_operativo',
-      nombre: 'Juan Pérez',
-      nombreEmpresa: 'Distribuidora La Rosa',
-      contacto: 'Juan Pérez',
-      categoria: 'Carnes y Embutidos',
-      telefono: '+507 6000-0002',
-      email: 'juan@distribuidoralarosa.com',
-      direccion: 'Calle 50, Ciudad de Panamá',
-      rif: 'J-12345678-9'
-    }
-  ];
-
   useEffect(() => {
-    console.log('AuthProvider - initializing');
-    const savedUser = localStorage.getItem('currentUser');
-    const savedUsers = localStorage.getItem('users');
-    
-    // Force reset users to ensure UUID compatibility
-    console.log('AuthProvider - forcing reset to UUID users');
-    localStorage.setItem('users', JSON.stringify(defaultUsers));
-    
-    // Clear current user if it exists to force re-login with UUID
-    if (savedUser) {
-      console.log('AuthProvider - clearing saved user to force re-login with UUID');
-      localStorage.removeItem('currentUser');
-      setUser(null);
+    // Check if user is already logged in from localStorage
+    const storedUser = localStorage.getItem('currentUser');
+    if (storedUser) {
+      const userData = JSON.parse(storedUser);
+      setUser(userData);
     }
   }, []);
 
-  const login = (username: string, password: string): boolean => {
-    console.log('AuthProvider - attempting login for:', username);
-    const savedUsers = localStorage.getItem('users');
-    const allUsers = savedUsers ? JSON.parse(savedUsers) : defaultUsers;
-    console.log('AuthProvider - available users:', allUsers.map(u => ({ username: u.username, role: u.role })));
-    
-    const foundUser = allUsers.find((u: User) => u.username === username && u.password === password);
-    
-    if (foundUser) {
-      console.log('AuthProvider - login successful for user:', foundUser.username, 'with role:', foundUser.role);
-      const updatedUser = { ...foundUser, lastAccess: new Date().toISOString() };
-      setUser(updatedUser);
-      localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+  const login = async (username: string, password: string): Promise<boolean> => {
+    try {
+      const { data, error } = await supabase.rpc('authenticate_user', {
+        input_username: username,
+        input_password: password
+      });
+
+      if (error || !data || data.length === 0) {
+        return false;
+      }
+
+      const userData = data[0];
+      const user: User = {
+        id: userData.user_id,
+        username: userData.username,
+        password: '', // No almacenamos la contraseña en el frontend
+        role: userData.role as 'contadora' | 'gerente_operativo' | 'admin',
+        nombre: userData.nombre,
+        telefono: userData.telefono,
+        email: userData.email,
+        direccion: userData.direccion,
+        rif: userData.rif,
+        nombreEmpresa: userData.nombre_empresa,
+        contacto: userData.contacto,
+        categoria: userData.categoria,
+        lastAccess: new Date().toISOString()
+      };
+
+      setUser(user);
+      localStorage.setItem('currentUser', JSON.stringify(user));
       return true;
+    } catch (error) {
+      console.error('Error during login:', error);
+      return false;
     }
-    
-    console.log('AuthProvider - login failed for:', username);
-    return false;
   };
 
   const logout = () => {
-    console.log('AuthProvider - logging out');
     setUser(null);
     localStorage.removeItem('currentUser');
   };
