@@ -116,9 +116,9 @@ export type Database = {
           created_at: string
           direccion: string | null
           email: string | null
-          id: string
           nombre: string | null
           nombre_empresa: string | null
+          password_hash: string | null
           rif: string | null
           role: string
           telefono: string | null
@@ -132,9 +132,9 @@ export type Database = {
           created_at?: string
           direccion?: string | null
           email?: string | null
-          id?: string
           nombre?: string | null
           nombre_empresa?: string | null
+          password_hash?: string | null
           rif?: string | null
           role: string
           telefono?: string | null
@@ -148,9 +148,9 @@ export type Database = {
           created_at?: string
           direccion?: string | null
           email?: string | null
-          id?: string
           nombre?: string | null
           nombre_empresa?: string | null
+          password_hash?: string | null
           rif?: string | null
           role?: string
           telefono?: string | null
