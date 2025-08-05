@@ -16,10 +16,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
-  const login = async (username: string, password: string): Promise<boolean> => {
+  const login = async (email: string, password: string): Promise<boolean> => {
     try {
       const { data, error } = await supabase.rpc('authenticate_user', {
-        input_username: username,
+        input_email: email,
         input_password: password
       });
 
