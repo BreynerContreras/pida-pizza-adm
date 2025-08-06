@@ -53,7 +53,7 @@ const Usuarios = () => {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('*')
+        .select('user_id, username, role, nombre, telefono, email, direccion, rif, nombre_empresa, contacto, categoria, created_at, updated_at')
         .order('created_at', { ascending: false });
 
       if (error) {
