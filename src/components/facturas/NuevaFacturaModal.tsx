@@ -344,7 +344,7 @@ const NuevaFacturaModal: React.FC<NuevaFacturaModalProps> = ({ isOpen, onClose, 
                         <td className="border border-border p-1">
                           {index === 15 ? (
                             <div className="h-8 flex items-center justify-end text-sm font-medium pr-2">
-                              ${calcularTotal()}
+                              Bs {calcularTotal()}
                             </div>
                           ) : (
                             <Input
