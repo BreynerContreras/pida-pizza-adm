@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
   DialogContent,
@@ -25,10 +24,6 @@ const NuevaFacturaModal: React.FC<NuevaFacturaModalProps> = ({ isOpen, onClose, 
   const { user } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const [facturas, setFacturas] = useState<any[]>([]);
-  const [numeroFacturaBuscar, setNumeroFacturaBuscar] = useState('');
-  const [facturaEncontrada, setFacturaEncontrada] = useState<any>(null);
-  const [detallesFactura, setDetallesFactura] = useState<any[]>([]);
 
   const [formData, setFormData] = useState({
     numeroFactura: '',
@@ -215,359 +210,194 @@ const NuevaFacturaModal: React.FC<NuevaFacturaModalProps> = ({ isOpen, onClose, 
       .toFixed(2);
   };
 
-  const buscarFactura = async () => {
-    if (!numeroFacturaBuscar.trim()) {
-      toast({
-        title: "Error",
-        description: "Por favor ingresa un número de factura.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      // Buscar la factura principal
-      const { data: factura, error } = await supabase
-        .from('invoices')
-        .select('*')
-        .eq('numero_factura', numeroFacturaBuscar)
-        .single();
-
-      if (error) {
-        toast({
-          title: "Factura no encontrada",
-          description: `No se encontró una factura con el número ${numeroFacturaBuscar}.`,
-          variant: "destructive"
-        });
-        setFacturaEncontrada(null);
-        setDetallesFactura([]);
-        return;
-      }
-
-      setFacturaEncontrada(factura);
-
-      // Buscar los detalles de la factura
-      const { data: detalles, error: errorDetalles } = await supabase
-        .from('descripcion_de_las_facturas')
-        .select('*')
-        .eq('invoice_id', factura.id)
-        .order('fila');
-
-      if (!errorDetalles) {
-        setDetallesFactura(detalles || []);
-      }
-
-      toast({
-        title: "Factura encontrada",
-        description: `Factura ${numeroFacturaBuscar} cargada exitosamente.`,
-      });
-
-    } catch (error) {
-      console.error('Error al buscar factura:', error);
-      toast({
-        title: "Error",
-        description: "Error al buscar la factura.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Gestión de Facturas</DialogTitle>
+          <DialogTitle>Nueva Factura</DialogTitle>
         </DialogHeader>
-        
-        <Tabs defaultValue="nueva" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="nueva">Nueva Factura</TabsTrigger>
-            <TabsTrigger value="consultar">Consultar Factura</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="nueva">
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="numeroFactura">Número de Factura *</Label>
-                  <Input
-                    id="numeroFactura"
-                    value={formData.numeroFactura}
-                    onChange={(e) => setFormData({...formData, numeroFactura: e.target.value})}
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="monto">Monto *</Label>
-                  <Input
-                    id="monto"
-                    type="number"
-                    step="0.01"
-                    value={formData.monto}
-                    onChange={(e) => setFormData({...formData, monto: e.target.value})}
-                    required
-                  />
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="fecha">Fecha de Emisión *</Label>
-                  <Input
-                    id="fecha"
-                    type="date"
-                    value={formData.fecha}
-                    onChange={(e) => setFormData({...formData, fecha: e.target.value})}
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="limitePago">Límite de Pago *</Label>
-                  <Input
-                    id="limitePago"
-                    type="date"
-                    value={formData.limitePago}
-                    onChange={(e) => setFormData({...formData, limitePago: e.target.value})}
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="nombreEmpresa">Nombre de la Empresa *</Label>
-                  <Input
-                    id="nombreEmpresa"
-                    value={formData.nombreEmpresa}
-                    onChange={(e) => setFormData({...formData, nombreEmpresa: e.target.value})}
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="rif">RIF (Opcional)</Label>
-                  <Input
-                    id="rif"
-                    value={formData.rif}
-                    onChange={(e) => setFormData({...formData, rif: e.target.value})}
-                    placeholder="Ej: J-12345678-9"
-                  />
-                </div>
-              </div>
-              
-              <div>
-                <Label>Detalle de la Factura *</Label>
-                <div className="border rounded-md overflow-hidden">
-                  <div className="overflow-x-auto">
-                    <table className="w-full border-collapse">
-                      <thead>
-                        <tr className="bg-muted">
-                          <th className="border border-border p-2 text-left font-medium w-24">Cantidad</th>
-                          <th className="border border-border p-2 text-left font-medium flex-1">Descripción o Concepto</th>
-                          <th className="border border-border p-2 text-left font-medium w-32">P. Unitario</th>
-                          <th className="border border-border p-2 text-left font-medium w-32">Monto</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {tablaDescripcion.map((fila, index) => (
-                          <tr key={index} className={index === 15 ? "bg-muted/50" : ""}>
-                            <td className="border border-border p-1">
-                              {index === 15 ? (
-                                <div className="h-8 flex items-center justify-center text-sm font-medium"></div>
-                              ) : (
-                                <Input
-                                  type="number"
-                                  step="0.01"
-                                  value={fila.cantidad}
-                                  onChange={(e) => handleTablaChange(index, 'cantidad', e.target.value)}
-                                  className="border-0 h-8 text-sm"
-                                  placeholder="0"
-                                />
-                              )}
-                            </td>
-                            <td className="border border-border p-1">
-                              {index === 15 ? (
-                                <div className="h-8 flex items-center justify-center text-sm font-medium"></div>
-                              ) : (
-                                <Input
-                                  value={fila.descripcion_concepto}
-                                  onChange={(e) => handleTablaChange(index, 'descripcion_concepto', e.target.value)}
-                                  className="border-0 h-8 text-sm"
-                                  placeholder="Descripción del producto/servicio"
-                                />
-                              )}
-                            </td>
-                            <td className="border border-border p-1">
-                              {index === 15 ? (
-                                <div className="h-8 flex items-center justify-end text-sm font-medium pr-2">
-                                  Monto Total:
-                                </div>
-                              ) : (
-                                <Input
-                                  type="number"
-                                  step="0.01"
-                                  value={fila.precio_unitario}
-                                  onChange={(e) => handleTablaChange(index, 'precio_unitario', e.target.value)}
-                                  className="border-0 h-8 text-sm"
-                                  placeholder="0.00"
-                                />
-                              )}
-                            </td>
-                            <td className="border border-border p-1">
-                              {index === 15 ? (
-                                <div className="h-8 flex items-center justify-end text-sm font-medium pr-2">
-                                  Bs {calcularTotal()}
-                                </div>
-                              ) : (
-                                <Input
-                                  type="number"
-                                  step="0.01"
-                                  value={fila.monto}
-                                  onChange={(e) => handleTablaChange(index, 'monto', e.target.value)}
-                                  className="border-0 h-8 text-sm"
-                                  placeholder="0.00"
-                                />
-                              )}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Complete al menos una fila con la información detallada de la factura
-                </p>
-              </div>
-              
-              <div>
-                <Label htmlFor="imagenes">Imagen de la Factura *</Label>
-                <Input
-                  id="imagenes"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  className="cursor-pointer"
-                  required
-                />
-                {formData.imagenes.length > 0 && (
-                  <p className="text-sm text-green-600 mt-2">
-                    ✓ {formData.imagenes.length} imagen seleccionada
-                  </p>
-                )}
-                <p className="text-sm text-gray-500 mt-1">
-                  Requerido: Debe subir la imagen de la factura como respaldo
-                </p>
-              </div>
-              
-              <div className="flex gap-2 pt-4">
-                <Button type="submit" className="flex-1" disabled={isLoading}>
-                  {isLoading ? 'Creando...' : 'Crear Factura'}
-                </Button>
-                <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>
-                  Cancelar
-                </Button>
-              </div>
-            </form>
-          </TabsContent>
-          
-          <TabsContent value="consultar" className="space-y-4">
-            <div className="space-y-4">
-              <div className="flex gap-2">
-                <div className="flex-1">
-                  <Label htmlFor="buscarFactura">Número de Factura</Label>
-                  <Input
-                    id="buscarFactura"
-                    value={numeroFacturaBuscar}
-                    onChange={(e) => setNumeroFacturaBuscar(e.target.value)}
-                    placeholder="Ingrese el número de factura"
-                  />
-                </div>
-                <div className="flex items-end">
-                  <Button onClick={buscarFactura} disabled={isLoading}>
-                    {isLoading ? 'Buscando...' : 'Buscar'}
-                  </Button>
-                </div>
-              </div>
-
-              {facturaEncontrada && (
-                <div className="space-y-4 border rounded-lg p-4">
-                  <h3 className="text-lg font-semibold">Información de la Factura</h3>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label>Número de Factura</Label>
-                      <p className="text-sm text-muted-foreground">{facturaEncontrada.numero_factura}</p>
-                    </div>
-                    <div>
-                      <Label>Monto Total</Label>
-                      <p className="text-sm text-muted-foreground">Bs {facturaEncontrada.monto}</p>
-                    </div>
-                    <div>
-                      <Label>Fecha de Emisión</Label>
-                      <p className="text-sm text-muted-foreground">{facturaEncontrada.fecha}</p>
-                    </div>
-                    <div>
-                      <Label>Límite de Pago</Label>
-                      <p className="text-sm text-muted-foreground">{facturaEncontrada.limite_pago}</p>
-                    </div>
-                    <div>
-                      <Label>Empresa</Label>
-                      <p className="text-sm text-muted-foreground">{facturaEncontrada.nombre_empresa}</p>
-                    </div>
-                    <div>
-                      <Label>Estado</Label>
-                      <p className="text-sm text-muted-foreground">{facturaEncontrada.estado}</p>
-                    </div>
-                  </div>
-
-                  {detallesFactura.length > 0 && (
-                    <div>
-                      <Label>Detalle de la Factura</Label>
-                      <div className="border rounded-md overflow-hidden mt-2">
-                        <table className="w-full border-collapse text-sm">
-                          <thead>
-                            <tr className="bg-muted">
-                              <th className="border border-border p-2 text-left">Cantidad</th>
-                              <th className="border border-border p-2 text-left">Descripción</th>
-                              <th className="border border-border p-2 text-left">P. Unitario</th>
-                              <th className="border border-border p-2 text-left">Monto</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {detallesFactura.map((detalle, index) => (
-                              <tr key={index}>
-                                <td className="border border-border p-2">{detalle.cantidad || '-'}</td>
-                                <td className="border border-border p-2">{detalle.descripcion_concepto || '-'}</td>
-                                <td className="border border-border p-2">{detalle.precio_unitario ? `Bs ${detalle.precio_unitario}` : '-'}</td>
-                                <td className="border border-border p-2">{detalle.monto ? `Bs ${detalle.monto}` : '-'}</td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                  )}
-
-                  {facturaEncontrada.imagen_url && (
-                    <div>
-                      <Label>Imagen de la Factura</Label>
-                      <div className="mt-2">
-                        <img 
-                          src={facturaEncontrada.imagen_url} 
-                          alt="Factura" 
-                          className="max-w-full h-auto border rounded-md"
-                        />
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="numeroFactura">Número de Factura *</Label>
+              <Input
+                id="numeroFactura"
+                value={formData.numeroFactura}
+                onChange={(e) => setFormData({...formData, numeroFactura: e.target.value})}
+                required
+              />
             </div>
-          </TabsContent>
-        </Tabs>
+            <div>
+              <Label htmlFor="monto">Monto *</Label>
+              <Input
+                id="monto"
+                type="number"
+                step="0.01"
+                value={formData.monto}
+                onChange={(e) => setFormData({...formData, monto: e.target.value})}
+                required
+              />
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="fecha">Fecha de Emisión *</Label>
+              <Input
+                id="fecha"
+                type="date"
+                value={formData.fecha}
+                onChange={(e) => setFormData({...formData, fecha: e.target.value})}
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="limitePago">Límite de Pago *</Label>
+              <Input
+                id="limitePago"
+                type="date"
+                value={formData.limitePago}
+                onChange={(e) => setFormData({...formData, limitePago: e.target.value})}
+                required
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="nombreEmpresa">Nombre de la Empresa *</Label>
+              <Input
+                id="nombreEmpresa"
+                value={formData.nombreEmpresa}
+                onChange={(e) => setFormData({...formData, nombreEmpresa: e.target.value})}
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="rif">RIF (Opcional)</Label>
+              <Input
+                id="rif"
+                value={formData.rif}
+                onChange={(e) => setFormData({...formData, rif: e.target.value})}
+                placeholder="Ej: J-12345678-9"
+              />
+            </div>
+          </div>
+          
+          <div>
+            <Label>Detalle de la Factura *</Label>
+            <div className="border rounded-md overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className="bg-muted">
+                      <th className="border border-border p-2 text-left font-medium w-24">Cantidad</th>
+                      <th className="border border-border p-2 text-left font-medium flex-1">Descripción o Concepto</th>
+                      <th className="border border-border p-2 text-left font-medium w-32">P. Unitario</th>
+                      <th className="border border-border p-2 text-left font-medium w-32">Monto</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {tablaDescripcion.map((fila, index) => (
+                      <tr key={index} className={index === 15 ? "bg-muted/50" : ""}>
+                        <td className="border border-border p-1">
+                          {index === 15 ? (
+                            <div className="h-8 flex items-center justify-center text-sm font-medium"></div>
+                          ) : (
+                            <Input
+                              type="number"
+                              step="0.01"
+                              value={fila.cantidad}
+                              onChange={(e) => handleTablaChange(index, 'cantidad', e.target.value)}
+                              className="border-0 h-8 text-sm"
+                              placeholder="0"
+                            />
+                          )}
+                        </td>
+                        <td className="border border-border p-1">
+                          {index === 15 ? (
+                            <div className="h-8 flex items-center justify-center text-sm font-medium"></div>
+                          ) : (
+                            <Input
+                              value={fila.descripcion_concepto}
+                              onChange={(e) => handleTablaChange(index, 'descripcion_concepto', e.target.value)}
+                              className="border-0 h-8 text-sm"
+                              placeholder="Descripción del producto/servicio"
+                            />
+                          )}
+                        </td>
+                        <td className="border border-border p-1">
+                          {index === 15 ? (
+                            <div className="h-8 flex items-center justify-end text-sm font-medium pr-2">
+                              Monto Total:
+                            </div>
+                          ) : (
+                            <Input
+                              type="number"
+                              step="0.01"
+                              value={fila.precio_unitario}
+                              onChange={(e) => handleTablaChange(index, 'precio_unitario', e.target.value)}
+                              className="border-0 h-8 text-sm"
+                              placeholder="0.00"
+                            />
+                          )}
+                        </td>
+                        <td className="border border-border p-1">
+                          {index === 15 ? (
+                            <div className="h-8 flex items-center justify-end text-sm font-medium pr-2">
+                              Bs {calcularTotal()}
+                            </div>
+                          ) : (
+                            <Input
+                              type="number"
+                              step="0.01"
+                              value={fila.monto}
+                              onChange={(e) => handleTablaChange(index, 'monto', e.target.value)}
+                              className="border-0 h-8 text-sm"
+                              placeholder="0.00"
+                            />
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <p className="text-sm text-muted-foreground mt-1">
+              Complete al menos una fila con la información detallada de la factura
+            </p>
+          </div>
+          
+          <div>
+            <Label htmlFor="imagenes">Imagen de la Factura *</Label>
+            <Input
+              id="imagenes"
+              type="file"
+              accept="image/*"
+              onChange={handleImageChange}
+              className="cursor-pointer"
+              required
+            />
+            {formData.imagenes.length > 0 && (
+              <p className="text-sm text-green-600 mt-2">
+                ✓ {formData.imagenes.length} imagen seleccionada
+              </p>
+            )}
+            <p className="text-sm text-gray-500 mt-1">
+              Requerido: Debe subir la imagen de la factura como respaldo
+            </p>
+          </div>
+          
+          <div className="flex gap-2 pt-4">
+            <Button type="submit" className="flex-1" disabled={isLoading}>
+              {isLoading ? 'Creando...' : 'Crear Factura'}
+            </Button>
+            <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>
+              Cancelar
+            </Button>
+          </div>
+        </form>
       </DialogContent>
     </Dialog>
   );
