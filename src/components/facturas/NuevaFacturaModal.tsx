@@ -199,6 +199,16 @@ const NuevaFacturaModal: React.FC<NuevaFacturaModalProps> = ({ isOpen, onClose, 
     setTablaDescripcion(nuevaTabla);
   };
 
+  const calcularTotal = () => {
+    return tablaDescripcion
+      .slice(0, 15) // Solo las primeras 15 filas (excluyendo la última)
+      .reduce((total, fila) => {
+        const monto = parseFloat(fila.monto) || 0;
+        return total + monto;
+      }, 0)
+      .toFixed(2);
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl">
@@ -288,44 +298,64 @@ const NuevaFacturaModal: React.FC<NuevaFacturaModalProps> = ({ isOpen, onClose, 
                   </thead>
                   <tbody>
                     {tablaDescripcion.map((fila, index) => (
-                      <tr key={index}>
+                      <tr key={index} className={index === 15 ? "bg-muted/50" : ""}>
                         <td className="border border-border p-1">
-                          <Input
-                            type="number"
-                            step="0.01"
-                            value={fila.cantidad}
-                            onChange={(e) => handleTablaChange(index, 'cantidad', e.target.value)}
-                            className="border-0 h-8 text-sm"
-                            placeholder="0"
-                          />
+                          {index === 15 ? (
+                            <div className="h-8 flex items-center justify-center text-sm font-medium"></div>
+                          ) : (
+                            <Input
+                              type="number"
+                              step="0.01"
+                              value={fila.cantidad}
+                              onChange={(e) => handleTablaChange(index, 'cantidad', e.target.value)}
+                              className="border-0 h-8 text-sm"
+                              placeholder="0"
+                            />
+                          )}
                         </td>
                         <td className="border border-border p-1">
-                          <Input
-                            value={fila.descripcion_concepto}
-                            onChange={(e) => handleTablaChange(index, 'descripcion_concepto', e.target.value)}
-                            className="border-0 h-8 text-sm"
-                            placeholder="Descripción del producto/servicio"
-                          />
+                          {index === 15 ? (
+                            <div className="h-8 flex items-center justify-center text-sm font-medium"></div>
+                          ) : (
+                            <Input
+                              value={fila.descripcion_concepto}
+                              onChange={(e) => handleTablaChange(index, 'descripcion_concepto', e.target.value)}
+                              className="border-0 h-8 text-sm"
+                              placeholder="Descripción del producto/servicio"
+                            />
+                          )}
                         </td>
                         <td className="border border-border p-1">
-                          <Input
-                            type="number"
-                            step="0.01"
-                            value={fila.precio_unitario}
-                            onChange={(e) => handleTablaChange(index, 'precio_unitario', e.target.value)}
-                            className="border-0 h-8 text-sm"
-                            placeholder="0.00"
-                          />
+                          {index === 15 ? (
+                            <div className="h-8 flex items-center justify-end text-sm font-medium pr-2">
+                              Monto Total:
+                            </div>
+                          ) : (
+                            <Input
+                              type="number"
+                              step="0.01"
+                              value={fila.precio_unitario}
+                              onChange={(e) => handleTablaChange(index, 'precio_unitario', e.target.value)}
+                              className="border-0 h-8 text-sm"
+                              placeholder="0.00"
+                            />
+                          )}
                         </td>
                         <td className="border border-border p-1">
-                          <Input
-                            type="number"
-                            step="0.01"
-                            value={fila.monto}
-                            onChange={(e) => handleTablaChange(index, 'monto', e.target.value)}
-                            className="border-0 h-8 text-sm"
-                            placeholder="0.00"
-                          />
+                          {index === 15 ? (
+                            <div className="h-8 flex items-center justify-end text-sm font-medium pr-2">
+                              ${calcularTotal()}
+                            </div>
+                          ) : (
+                            <Input
+                              type="number"
+                              step="0.01"
+                              value={fila.monto}
+                              onChange={(e) => handleTablaChange(index, 'monto', e.target.value)}
+                              className="border-0 h-8 text-sm"
+                              placeholder="0.00"
+                            />
+                          )}
                         </td>
                       </tr>
                     ))}
