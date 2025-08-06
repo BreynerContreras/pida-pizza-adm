@@ -166,7 +166,7 @@ export type Database = {
     }
     Functions: {
       authenticate_user: {
-        Args: { input_username: string; input_password: string }
+        Args: { input_email: string; input_password: string }
         Returns: {
           id: string
           user_id: string
