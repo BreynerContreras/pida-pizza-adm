@@ -35,6 +35,21 @@ const NuevaFacturaModal: React.FC<NuevaFacturaModalProps> = ({ isOpen, onClose, 
     imagenes: [] as File[]
   });
 
+  // Estado para la tabla de descripción detallada
+  const [tablaDescripcion, setTablaDescripcion] = useState(() => {
+    const filas = [];
+    for (let i = 0; i < 16; i++) {
+      filas.push({
+        fila: i,
+        cantidad: '',
+        descripcion_concepto: '',
+        precio_unitario: '',
+        monto: ''
+      });
+    }
+    return filas;
+  });
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -100,6 +115,28 @@ const NuevaFacturaModal: React.FC<NuevaFacturaModalProps> = ({ isOpen, onClose, 
 
       if (error) throw error;
 
+      // Guardar las filas de la tabla de descripción que tienen contenido
+      const filasConContenido = tablaDescripcion.filter(fila => 
+        fila.cantidad || fila.descripcion_concepto || fila.precio_unitario || fila.monto
+      );
+
+      if (filasConContenido.length > 0) {
+        const insertData = filasConContenido.map(fila => ({
+          invoice_id: data.id,
+          fila: fila.fila,
+          cantidad: fila.cantidad ? parseFloat(fila.cantidad) : null,
+          descripcion_concepto: fila.descripcion_concepto || null,
+          precio_unitario: fila.precio_unitario ? parseFloat(fila.precio_unitario) : null,
+          monto: fila.monto ? parseFloat(fila.monto) : null
+        }));
+
+        const { error: tablaError } = await supabase
+          .from('descripcion_de_las_facturas')
+          .insert(insertData);
+
+        if (tablaError) throw tablaError;
+      }
+
       toast({
         title: "Factura creada",
         description: "La factura ha sido creada exitosamente.",
@@ -116,6 +153,19 @@ const NuevaFacturaModal: React.FC<NuevaFacturaModalProps> = ({ isOpen, onClose, 
         descripcion: '',
         imagenes: []
       });
+      
+      // Limpiar tabla de descripción
+      const filasVacias = [];
+      for (let i = 0; i < 16; i++) {
+        filasVacias.push({
+          fila: i,
+          cantidad: '',
+          descripcion_concepto: '',
+          precio_unitario: '',
+          monto: ''
+        });
+      }
+      setTablaDescripcion(filasVacias);
       
       onSubmit(data);
       onClose();
@@ -138,6 +188,15 @@ const NuevaFacturaModal: React.FC<NuevaFacturaModalProps> = ({ isOpen, onClose, 
         imagenes: [e.target.files[0]] // Solo tomar la primera imagen
       });
     }
+  };
+
+  const handleTablaChange = (filaIndex: number, campo: string, valor: string) => {
+    const nuevaTabla = [...tablaDescripcion];
+    nuevaTabla[filaIndex] = {
+      ...nuevaTabla[filaIndex],
+      [campo]: valor
+    };
+    setTablaDescripcion(nuevaTabla);
   };
 
   return (
@@ -215,15 +274,68 @@ const NuevaFacturaModal: React.FC<NuevaFacturaModalProps> = ({ isOpen, onClose, 
           </div>
           
           <div>
-            <Label htmlFor="descripcion">Descripción *</Label>
-            <Textarea
-              id="descripcion"
-              value={formData.descripcion}
-              onChange={(e) => setFormData({...formData, descripcion: e.target.value})}
-              rows={3}
-              placeholder="Detalle el concepto de la factura..."
-              required
-            />
+            <Label>Detalle de la Factura *</Label>
+            <div className="border rounded-md overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className="bg-muted">
+                      <th className="border border-border p-2 text-left font-medium w-24">Cantidad</th>
+                      <th className="border border-border p-2 text-left font-medium flex-1">Descripción o Concepto</th>
+                      <th className="border border-border p-2 text-left font-medium w-32">P. Unitario</th>
+                      <th className="border border-border p-2 text-left font-medium w-32">Monto</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {tablaDescripcion.map((fila, index) => (
+                      <tr key={index}>
+                        <td className="border border-border p-1">
+                          <Input
+                            type="number"
+                            step="0.01"
+                            value={fila.cantidad}
+                            onChange={(e) => handleTablaChange(index, 'cantidad', e.target.value)}
+                            className="border-0 h-8 text-sm"
+                            placeholder="0"
+                          />
+                        </td>
+                        <td className="border border-border p-1">
+                          <Input
+                            value={fila.descripcion_concepto}
+                            onChange={(e) => handleTablaChange(index, 'descripcion_concepto', e.target.value)}
+                            className="border-0 h-8 text-sm"
+                            placeholder="Descripción del producto/servicio"
+                          />
+                        </td>
+                        <td className="border border-border p-1">
+                          <Input
+                            type="number"
+                            step="0.01"
+                            value={fila.precio_unitario}
+                            onChange={(e) => handleTablaChange(index, 'precio_unitario', e.target.value)}
+                            className="border-0 h-8 text-sm"
+                            placeholder="0.00"
+                          />
+                        </td>
+                        <td className="border border-border p-1">
+                          <Input
+                            type="number"
+                            step="0.01"
+                            value={fila.monto}
+                            onChange={(e) => handleTablaChange(index, 'monto', e.target.value)}
+                            className="border-0 h-8 text-sm"
+                            placeholder="0.00"
+                          />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <p className="text-sm text-muted-foreground mt-1">
+              Complete al menos una fila con la información detallada de la factura
+            </p>
           </div>
           
           <div>
