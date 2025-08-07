@@ -14,42 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      descripcion_de_las_facturas: {
-        Row: {
-          cantidad: number | null
-          created_at: string
-          descripcion_concepto: string | null
-          fila: number
-          id: string
-          invoice_id: string
-          monto: number | null
-          precio_unitario: number | null
-          updated_at: string
-        }
-        Insert: {
-          cantidad?: number | null
-          created_at?: string
-          descripcion_concepto?: string | null
-          fila: number
-          id?: string
-          invoice_id: string
-          monto?: number | null
-          precio_unitario?: number | null
-          updated_at?: string
-        }
-        Update: {
-          cantidad?: number | null
-          created_at?: string
-          descripcion_concepto?: string | null
-          fila?: number
-          id?: string
-          invoice_id?: string
-          monto?: number | null
-          precio_unitario?: number | null
-          updated_at?: string
-        }
-        Relationships: []
-      }
       invoices: {
         Row: {
           created_at: string
